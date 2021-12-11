@@ -1,0 +1,57 @@
+Growth process
+
+growth_time = length of time (in hours) for each growth stage
+
+Each berry grows in 4 stages
+
+When a growth stage needs to be checked, we examine:
+-Water level throughout the growth stage vs Water Requirement
+ -> The water req is how often the plant needs to be watered per growth stage
+   --> From API, this is a factor of soil_dryness
+
+Examine: Last Watered Time, Last Growth Time, Current Time = Moisture
+
+Moisture = Moisture - (Dry Rate * (Current Time vs Last Checked Time (seconds) / 3600))
+
+--- Some of the following is outdated ---
+
+Essentially, one of three scenarios occur when checking in on a plant:
+1) The plant has not yet reached its growth stage.
+2) The plant has reached a growth stage.
+3) The plant has surpassed two or more growth stages.
+
+The important thing is knowing what Moisture is at time of growth stage, which can be calculated.
+
+If we're in Scenario 1, then it's a simple calculation of current time vs last watered time.
+
+If we're in Scenario 2. We calculate growth time vs last watered time. Use that dryness level for plant health and growth calculations.
+Then we update dryness based on amount of time between growth time and current time, this gives the current dryness.
+
+If we're in Scenario 3, we iteratively step through each growth stage and do requisite calculations before finally grabbing the current
+dryness.
+
+Example:
+Planting a Cheri Berry (Growth time: 3 hours, Water Req: 15)
+The berry is planted at 0:00:00 AM. Last Watered is NULL. Moisture currently: 0%.
+The berry is watered at 0:05:00 AM. Last Watered is 0:00:05 AM. Moisture currently: 100%.
+The berry is checked at 2:30:00 AM. Last Watered is 0:00:05 AM. Moisture currently: 71.25%
+
+
+-Sunlight level throughout the growth stage vs Sunlight Requirement
+-Temperature throughout the growth stage vs Temperature Requirement
+
+
+
+Weather
+
+When a user checks their farm which is located in Location Y, and Y's geo_profile was last updated 24+ hours before the current time,
+an API call is made to weather history API for day of current time. The API gives us hour-by-hour stats for that day.
+
+We average out temperature, chance of rain, cloudiness, etc. for every forecasted/historical hour, and then save that to geo profile.
+
+The only problem with this is that the weather data we use is the weather at the time the farm is checked, not necessarily when
+growth stages occured. This could be alleviated by keeping a rolling history of Z days; any plants wilt after unattended for Z days.
+So either we'll have the data in history, or the plant will be wilted anyway.
+
+Question is, how to structure this in a relational DB schema? Create a weather averages table?
+Here's where I feel a NoSQL DB would have the advantage.
