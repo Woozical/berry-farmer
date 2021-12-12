@@ -1,0 +1,90 @@
+GeoProfile
+----------
+
+User
+----------
+authentication
+registration
+
+Farm
+----------
+get farm w/ crops
+update farm
+
+
+Crop
+----------
+update
+
+
+
+
+-> GET /api/farms/id 
+<- 200 Response:
+{
+  message: "ok",
+  farm: {
+    id: 1,
+    length: 3,
+    width: 3,
+    irrigation_lvl: 0,
+    location: 1
+    crops : [
+      {
+        id: 1,
+        berry_type: "cheri",
+        cur_growth_stage: 0,
+        health: 100,
+        moisture: 0,
+        x: 0,
+        y: 0
+      },
+      {
+        id: 2,
+        berry_type: "chesto",
+        cur_growth_stage: 0,
+        health: 100,
+        moisture: 0,
+        x: 1,
+        y: 0
+      }
+    ]
+  }
+}
+
+This response occurs when 
+-> GET /api/farms/id
+<- 211 (Needs Update) Response:
+{
+  message: "needs update",
+  verbose: "The resource's information needs to be updated before consumption. Send a PATCH request to /api/farms/{id}."
+}
+
+-> GET /api/crops/id
+<- Response:
+{
+  message: "ok",
+  crop: {
+    id: 1,
+    berry_data: {
+      type: "cheri"
+    },
+    cur_growth_stage: 0,
+    planted_at: time,
+    health: 100,
+    moisture: 0,
+    farm_id: 1,
+    x: 0,
+    y: 0
+  }
+}
+
+--- Performs update on a single crop, can optionally provide { water:} ---
+-> PATCH /api/crops/id
+< - Response:
+{
+  message: "ok",
+  crop: {
+    // updated data
+  }
+}
