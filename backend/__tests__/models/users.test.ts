@@ -3,6 +3,12 @@
 import db from"../../db";
 import { BadRequestError } from "../../expressError";
 import User from "../../models/user";
+import { commonAfterAll, commonAfterEach, commonBeforeAll, commonBeforeEach } from "./_testCommon";
+
+beforeAll(commonBeforeAll);
+beforeEach(commonBeforeEach);
+afterAll(commonAfterAll);
+afterEach(commonAfterEach);
 
 describe("Registration Method", () => {
   // new user template
@@ -17,20 +23,32 @@ describe("Registration Method", () => {
     const found = await db.query("SELECT * FROM users WHERE username = 'new'");
     expect(found.rows.length).toEqual(1);
     expect(found.rows[0].email).toEqual("user@mail.com");
-    expect(found.rows[0].funds).toEqual(0);
+    expect(found.rows[0].funds).toEqual("0");
     // User's password should be hashed
     expect(found.rows[0].password).not.toEqual("password");
     expect(found.rows[0].password.startsWith("$2b$")).toEqual(true);
   });
 
-  it("throws bad request error on dupe info", async () => {
+  it("throws bad request error on dupe username", async () => {
     try {
       await User.register({ ...newUser, password: "password" });
-      await User.register({ ...newUser, password: "password" });
+      await User.register({ ...newUser, email: "new44@mail.com", password: "password" });
       fail();
     } catch (err) {
+      console.log(err);
       expect(err instanceof BadRequestError).toEqual(true);
     }
   });
+
+  it("throws bad request error on dupe email", async () => {
+    try {
+      await User.register({ ...newUser, password: "password" });
+      await User.register({ ...newUser, username: "new22", password: "password" });
+      fail();
+    } catch (err) {
+      console.log(err);
+      expect(err instanceof BadRequestError).toEqual(true);
+    }
+  })
 });
 

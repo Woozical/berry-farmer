@@ -1,7 +1,7 @@
 ﻿-- Exported from QuickDBD: https://www.quickdatabasediagrams.com/
 -- NOTE! If you have used non-SQL datatypes in your design, you will have to change these here.
 
-\c berry_farmer
+\c berry_farmer_test
 
 CREATE TABLE users (
     id serial PRIMARY KEY,
@@ -38,7 +38,7 @@ CREATE TABLE weather_data (
     date date NOT NULL,
     avg_temp numeric NOT NULL,
     avg_cloud numeric NOT NULL,
-    avg_rainfall numeric NOT NULL CONSTRAINT positive_avg_rainfaill CHECK (avg_rainfaill >= 0),
+    avg_rainfall numeric NOT NULL CONSTRAINT positive_avg_rainfall CHECK (avg_rainfall >= 0),
     chance_rain numeric NOT NULL CONSTRAINT positive_chance_rain CHECK (chance_rain >= 0),
     
     CONSTRAINT pk_weather_data PRIMARY KEY (
