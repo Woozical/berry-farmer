@@ -2,11 +2,12 @@
 
 import express from "express";
 import { NotFoundError, ExpressError } from "./expressError";
+import authRoutes from "./routes/auth";
 
 const app: express.Application = express();
 
 app.use(express.json());
-
+app.use("/auth", authRoutes);
 app.get('/', (req, res) => {
   res.json({message: "You have reached the BerryFarmer API"});
 });
