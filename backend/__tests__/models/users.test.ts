@@ -75,3 +75,29 @@ describe("Authentication Method", () => {
   });
 });
 
+describe("Update method", () => {
+  it("updates user with given key/val pairs", async () => {
+    const u1 = await User.update("u1", { funds: 500 });
+    const u2 = await User.update("u2", { funds: 15, email: "u22@mail.com" });
+
+    // Returns user object with updated info
+    expect(u1).toEqual({username: "u1", email: "u1@mail.com", funds: 500});
+    expect(u2).toEqual({username: "u2", email: "u22@mail.com", funds: 15});
+
+    // Changes exist in the db
+    const result = await db.query("SELECT username, email, funds FROM users WHERE username = 'u1' OR username = 'u2' ORDER BY username");
+    const [db1, db2] = result.rows;
+    expect(db1.funds).toEqual("500");
+    expect(db2.email).toEqual("u22@mail.com");
+    expect(db2.funds).toEqual("15");
+  });
+
+  it("throws NotFoundError if given invalid username", async () => {
+    try {
+      await User.update("idontexist", { funds: 500 });
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toEqual(true);
+    }
+  });
+});

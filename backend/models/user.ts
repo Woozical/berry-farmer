@@ -2,11 +2,17 @@ import db from "../db";
 import bcrypt from "bcrypt";
 import { BadRequestError, NotFoundError, UnauthorizedError } from "../expressError";
 import { BCRYPT_WORK_FACTOR } from "../config";
+import { sqlForPartialUpdate } from "../utils/sql";
 
 interface RegisterProps{
   username: string,
   email: string,
   password: string
+}
+
+interface UpdateProps{
+  email?: string,
+  funds?: number
 }
 
 export default class User {
@@ -24,15 +30,13 @@ export default class User {
          RETURNING username, email, funds`,
          [username, email, hashedPW]
       );
-      const user = {...result.rows[0]};
-      user.funds = +user.funds;
-      return user;
+      
+      return {...result.rows[0], funds: Number(result.rows[0].funds)};
     } catch (err:any) {
       if (err.code && err.code === '23505'){
         const keyViolation = err.constraint.includes("username") ? `username: ${username}` : `email: ${email}`;
         throw new BadRequestError(`Bad Request: Duplicate ${keyViolation}`);
       }
-      
       throw err;
     }
   }
@@ -48,11 +52,26 @@ export default class User {
 
     const auth = await bcrypt.compare(password, result.rows[0].password);
     if (auth) {
-      const user = {...result.rows[0]};
-      user.funds = +user.funds;
+      const user = {...result.rows[0], funds: Number(result.rows[0].funds)};
       delete user.password;
       return user;
     }
     throw new UnauthorizedError();
+  }
+
+  /** Updates user with given username and data
+   *  Returns object with updated user data
+   *  Throws NotFoundError if no matching username
+   */
+  static async update(username: string, newData:UpdateProps){
+    const { values, setCols } = sqlForPartialUpdate(newData);
+    console.log(values);
+    console.log(setCols);
+    const result = await db.query(
+      `UPDATE users SET ${setCols} WHERE username = $${values.length+1}
+       RETURNING username, email, funds`, [...values, username]
+    );
+    if (result.rows.length < 1) throw new NotFoundError(`No user with username ${username}`);
+    return {...result.rows[0], funds : Number(result.rows[0].funds)};
   }
 }
