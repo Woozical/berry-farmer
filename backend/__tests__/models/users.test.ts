@@ -1,7 +1,7 @@
 "use strict";
 
 import db from"../../db";
-import { BadRequestError } from "../../expressError";
+import { BadRequestError, NotFoundError, UnauthorizedError } from "../../expressError";
 import User from "../../models/user";
 import { commonAfterAll, commonAfterEach, commonBeforeAll, commonBeforeEach } from "./_testCommon";
 
@@ -35,7 +35,6 @@ describe("Registration Method", () => {
       await User.register({ ...newUser, email: "new44@mail.com", password: "password" });
       fail();
     } catch (err) {
-      console.log(err);
       expect(err instanceof BadRequestError).toEqual(true);
     }
   });
@@ -46,9 +45,33 @@ describe("Registration Method", () => {
       await User.register({ ...newUser, username: "new22", password: "password" });
       fail();
     } catch (err) {
-      console.log(err);
       expect(err instanceof BadRequestError).toEqual(true);
     }
   })
+});
+
+describe("Authentication Method", () => {
+  it("returns user object on success", async () => {
+    const res = await User.authenticate("u1", "pw1");
+    expect(res).toEqual({username: "u1", email: "u1@mail.com", funds: 0});
+  });
+
+  it("throws NotFoundError if no such user", async () => {
+    try{
+      await User.authenticate("idontexist", "pass");
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toEqual(true);
+    }
+  });
+
+  it("throws UnauthorizedError if no password match", async () => {
+    try {
+      await User.authenticate("u1", "incorrectpassword");
+      fail();
+    } catch (err) {
+      expect(err instanceof UnauthorizedError).toEqual(true);
+    }
+  });
 });
 
