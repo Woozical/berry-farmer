@@ -76,6 +76,13 @@ export default class User {
   /** Updates user with given username and data
    *  Returns object with updated user data
    *  Throws NotFoundError if no matching username
+   *  
+   *  SECURITY RISK: The interface of the data param is checked by Typescript, which does not validate at runtime.
+   *  Therefore, data should be passed to this method explicitly, or requests should be validated via a schema before
+   *  calling this method, as this method will update any fields in the data param.
+   *  --
+   *  GOOD: User.update("johndoe", { funds: req.body.funds, email: req.body.email });
+   *  BAD: User.update("johndoe", req.body); OR User.update("johndoe", {...req.body});
    */
   static async update(username: string, newData:UpdateProps){
     const { values, setCols } = sqlForPartialUpdate(newData);
