@@ -101,3 +101,24 @@ describe("Update method", () => {
     }
   });
 });
+
+describe("Get method", () => {
+  it("retrieves user info with given username", async () => {
+    const res = await User.get("u3", false);
+    expect(res).toEqual({username: "u3", email: "u3@mail.com", funds: 0});
+  });
+
+  it("respects privacy by default", async () => {
+    const res = await User.get("u3");
+    expect(res).toEqual({username: "u3", funds: 0});
+  });
+  
+  it("throws NotFoundError if given invalid username", async () => {
+    try {
+      await User.get("idontexist");
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toEqual(true);
+    }
+  });
+});

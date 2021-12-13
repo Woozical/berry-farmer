@@ -17,6 +17,20 @@ interface UpdateProps{
 
 export default class User {
 
+  /** Finds user with given username in database
+   *  Returns { username, funds } if hideSensitive=true, { username, email, funds } if hideSensitive=false
+   *  Throws NotFoundError if no user with such username
+   */
+  static async get(username:string, hideSensitive:boolean=true){
+    const result = await db.query(
+      `SELECT username, funds ${hideSensitive ? '' : ', email'}
+       FROM users WHERE username = $1`, [username]
+    );
+    if (result.rows.length < 1) throw new NotFoundError(`No user with username ${username}`);
+
+    return {...result.rows[0], funds: Number(result.rows[0].funds)};
+  }
+
   /** Registers user with given data
    *  Returns { username, email, funds }
    *  Throws BadRequestError on duplicate username and/or email
@@ -65,8 +79,6 @@ export default class User {
    */
   static async update(username: string, newData:UpdateProps){
     const { values, setCols } = sqlForPartialUpdate(newData);
-    console.log(values);
-    console.log(setCols);
     const result = await db.query(
       `UPDATE users SET ${setCols} WHERE username = $${values.length+1}
        RETURNING username, email, funds`, [...values, username]
