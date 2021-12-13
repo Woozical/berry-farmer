@@ -12,10 +12,10 @@ INSERT INTO geo_profiles (name, region, country)
          ('Henderson', 'Nevada', 'United States'),
          ('Boston', 'Massachusetts', 'United States');
 
-INSERT INTO farms (owner_id, location)
-  VALUES (1, 1),
-         (2, 2),
-         (3, 3);
+INSERT INTO farms (owner, location)
+  VALUES ('johndoe', 1),
+         ('janedoe', 2),
+         ('abc123', 3);
 
 INSERT INTO weather_data (location, date, avg_temp, avg_cloud, avg_rainfall, chance_rain)
   VALUES (1, '2020-10-20', 55, 75, 0.2, 0.5),
@@ -37,8 +37,8 @@ INSERT INTO crops (berry_type, farm_id, farm_x, farm_y)
          ('pecha', 2, 0, 0),
          ('cheri', 3, 1, 1);
 
-INSERT INTO user_inventories (user_id, berry_type, amount)
-  VALUES (1, 'cheri', 3),
-         (2, 'chesto', 2),
-         (2, 'cheri', 3),
-         (3, 'pecha', 99);
+INSERT INTO user_inventories (username, berry_type, amount)
+  VALUES ('johndoe', 'cheri', 3),
+         ('janedoe', 'chesto', 2),
+         ('janedoe', 'cheri', 3),
+         ('abc123', 'pecha', 99);
