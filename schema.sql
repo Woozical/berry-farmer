@@ -1,11 +1,10 @@
 ﻿-- Exported from QuickDBD: https://www.quickdatabasediagrams.com/
 -- NOTE! If you have used non-SQL datatypes in your design, you will have to change these here.
 
-\c berry_farmer_test
+\c berry_farmer
 
 CREATE TABLE users (
-    id serial PRIMARY KEY,
-    username text UNIQUE NOT NULL,
+    username text PRIMARY KEY,
     email text UNIQUE NOT NULL,
     password text NOT NULL,
     funds numeric  DEFAULT 0 NOT NULL
@@ -29,7 +28,7 @@ CREATE TABLE farms (
     width smallint DEFAULT 3 NOT NULL CONSTRAINT min_width CHECK (width >= 3),
     irrigation_lvl smallint DEFAULT 0 NOT NULL CONSTRAINT positive_irrig_lvl CHECK (irrigation_lvl >= 0),
     last_checked_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    owner_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    owner text NOT NULL REFERENCES users(username) ON DELETE CASCADE,
     location integer NOT NULL REFERENCES geo_profiles(id)
 );
 
@@ -75,12 +74,12 @@ CREATE TABLE crops (
 );
 
 CREATE TABLE user_inventories (
-    user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    username text NOT NULL REFERENCES users(username) ON DELETE CASCADE,
     berry_type text NOT NULL REFERENCES berry_profiles(name),
     amount integer DEFAULT 0 NOT NULL CONSTRAINT positive_amount CHECK (amount >= 0),
 
     CONSTRAINT user_inventories_pk PRIMARY KEY (
-        user_id, berry_type
+        username, berry_type
     )
 );
 
