@@ -1,8 +1,7 @@
 "use strict";
 import app from "./app";
+import { PORT } from "./config";
 
-const port: number = 3001;
-
-app.listen(port, () => {
-  console.log(`Express App started on http://localhost:${port}/`);
+app.listen(PORT, () => {
+  console.log(`Express App started on http://localhost:${PORT}/`);
 });
