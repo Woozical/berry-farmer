@@ -6,6 +6,8 @@ async function commonBeforeAll(){
   /** Wipe DB */
   await db.query("DELETE FROM crops");
   await db.query("DELETE FROM farms");
+  await db.query("DELETE FROM weather_data");
+  await db.query("DELETE FROM user_inventories");
   await db.query("DELETE FROM berry_profiles");
   await db.query("DELETE FROM geo_profiles");
   await db.query("DELETE FROM users");
@@ -52,10 +54,28 @@ async function commonBeforeAll(){
 
   /** seed crops */
   await db.query(
-    `INSERT INTO crops (berry_type, farm_id, farm_x, farm_y)
-     VALUES ('cheri', $1, 0, 0),
-            ('chesto', $2, 1, 1)`,
+    `INSERT INTO crops (berry_type, farm_id, farm_x, farm_y, moisture)
+     VALUES ('cheri', $1, 0, 0, 50),
+            ('chesto', $2, 1, 1, 0)`,
     farmIDs
+  );
+
+  /** seed weather_data */
+  await db.query(
+    `INSERT INTO weather_data (location, date, avg_temp, avg_cloud, total_rainfall)
+                 VALUES ($1, '2010-01-10', 10, 0.1, 1.0 ),
+                        ($1, '2011-11-11', 11, 1.1, 1.1 ),
+                        ($2, '2020-02-20', 20, 0.2, 2.0 ),
+                        ($2, '2020-12-12', 12, 1.2, 1.2)`,
+    locationIDs
+  );
+
+  /** seed user inventories */
+  await db.query(
+    `INSERT INTO user_inventories (username, berry_type, amount)
+                 VALUES ('u1', 'cheri', 1),
+                        ('u2', 'chesto', 2),
+                        ('u3', 'pecha', 3)`
   );
 }
 

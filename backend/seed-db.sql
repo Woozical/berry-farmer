@@ -18,12 +18,12 @@ INSERT INTO farms (owner, location)
          ('abc123', 3);
 
 INSERT INTO weather_data (location, date, avg_temp, avg_cloud, total_rainfall)
-  VALUES (1, '2020-10-20', 55, 75, 0.2, 0.5),
-         (1, '2020-10-21', 50, 80, 0, 0),
-         (2, '2021-12-11', 66, 15, 0, 0),
-         (3, '2021-12-11', 70, 10, 0, 0),
-         (4, '2021-12-11', 65, 15, 0, 0),
-         (5, '2021-12-11', 44, 70, 0.6, 0.9);
+  VALUES (1, '2020-10-20', 55, 75, 0.2),
+         (1, '2020-10-21', 50, 80, 0),
+         (2, '2021-12-11', 66, 15, 0),
+         (3, '2021-12-11', 70, 10, 0),
+         (4, '2021-12-11', 65, 15, 0),
+         (5, '2021-12-11', 44, 70, 0.6);
 
 INSERT INTO berry_profiles (name, growth_time, size, dry_rate, poke_type, poke_power, ideal_temp, ideal_cloud)
   VALUES ('cheri', 3, 20, 10, 'fire', 60, 90, 15),

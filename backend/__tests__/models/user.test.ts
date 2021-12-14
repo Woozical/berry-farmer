@@ -54,7 +54,7 @@ describe("Registration Method", () => {
 describe("Authentication Method", () => {
   it("returns user object on success", async () => {
     const res = await User.authenticate("u1", "pw1");
-    expect(res).toEqual({username: "u1", email: "u1@mail.com", funds: 0});
+    expect(res).toEqual({username: "u1", email: "u1@mail.com", funds: 0, is_admin: false});
   });
 
   it("throws NotFoundError if no such user", async () => {

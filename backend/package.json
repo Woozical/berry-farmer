@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "jest -i",
-    "start": "nodemon index.ts"
+    "start": "nodemon index.ts",
+    "init-db": "psql < init-db.sql && psql < seed-db.sql",
+    "init-test-db": "cd __tests__ && psql < init-test-db.sql"
   },
   "keywords": [],
   "author": "",

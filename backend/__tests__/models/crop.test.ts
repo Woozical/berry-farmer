@@ -16,7 +16,7 @@ describe("Get method", () => {
     const res = await Crop.get(crop.id);
     expect(res).toEqual({
       id: crop.id,
-      moisture: 0,
+      moisture: 50,
       health: 100,
       curGrowthStage: 0,
       plantedAt: expect.any(Date),
@@ -57,6 +57,7 @@ describe("Calculate moisture level method", () => {
                    VALUES ('pecha', 100, $1, 2, 2)
        RETURNING id`, [farmID]);
     const {id:cropID} = cRes.rows[0];
+
     // 100 Moisture after 2 hours (7200 seconds) with 15 dry rate should be near 70
     expect(await Crop.calcMoisture(7200, {cropID})).toBeCloseTo(70);
     // Ditto, works with given props if no cropID passed
@@ -66,6 +67,8 @@ describe("Calculate moisture level method", () => {
     
     // 100 Moisture after 2hr 25min (8700 seconds) with 15 dry rate should be near 63.75
     expect(await Crop.calcMoisture(8700, {cropID})).toBeCloseTo(63.75);
+
+    expect(await Crop.calcMoisture(500, {moisture: 0, dryRate: 20})).toEqual(0);
   });
 
   it("throws BadRequestError if invalid prop configuration", async () => {
@@ -117,12 +120,12 @@ describe("Update method", () => {
   it("updates the db with given information", async () => {
     const q = await db.query("SELECT * FROM crops WHERE berry_type = 'chesto' ");
     const crop = q.rows[0];
-    const res = await Crop.update(crop.id, {moisture: 50, health: 25, curGrowthStage: 1});
+    const res = await Crop.update(crop.id, {moisture: 45, health: 25, curGrowthStage: 1});
     
     // returns object with crop data
     expect(res).toEqual({
       id : crop.id,
-      moisture: 50,
+      moisture: 45,
       health: 25,
       curGrowthStage: 1,
       plantedAt : expect.any(Date),
@@ -135,7 +138,7 @@ describe("Update method", () => {
     // changes reflect in DB
     const qU = await db.query("SELECT * FROM crops WHERE id = $1", [crop.id]);
     const updated = qU.rows[0];
-    expect(updated.moisture).toEqual("50");
+    expect(updated.moisture).toEqual("45");
     expect(updated.health).toEqual("25");
     expect(updated.cur_growth_stage).toEqual(1);
 
