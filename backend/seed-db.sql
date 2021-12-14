@@ -17,7 +17,7 @@ INSERT INTO farms (owner, location)
          ('janedoe', 2),
          ('abc123', 3);
 
-INSERT INTO weather_data (location, date, avg_temp, avg_cloud, avg_rainfall, chance_rain)
+INSERT INTO weather_data (location, date, avg_temp, avg_cloud, total_rainfall)
   VALUES (1, '2020-10-20', 55, 75, 0.2, 0.5),
          (1, '2020-10-21', 50, 80, 0, 0),
          (2, '2021-12-11', 66, 15, 0, 0),

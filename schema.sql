@@ -1,13 +1,11 @@
-﻿-- Exported from QuickDBD: https://www.quickdatabasediagrams.com/
--- NOTE! If you have used non-SQL datatypes in your design, you will have to change these here.
-
-\c berry_farmer
+﻿\c berry_farmer
 
 CREATE TABLE users (
     username text PRIMARY KEY,
     email text UNIQUE NOT NULL,
     password text NOT NULL,
-    funds numeric  DEFAULT 0 NOT NULL
+    is_admin boolean DEFAULT false NOT NULL,
+    funds numeric  DEFAULT 0 NOT NULL CONSTRAINT positive_funds CHECK (funds >= 0)
 );
 
 CREATE TABLE geo_profiles (
@@ -37,8 +35,7 @@ CREATE TABLE weather_data (
     date date NOT NULL,
     avg_temp numeric NOT NULL,
     avg_cloud numeric NOT NULL,
-    avg_rainfall numeric NOT NULL CONSTRAINT positive_avg_rainfall CHECK (avg_rainfall >= 0),
-    chance_rain numeric NOT NULL CONSTRAINT positive_chance_rain CHECK (chance_rain >= 0),
+    total_rainfall numeric NOT NULL CONSTRAINT positive_total_rainfall CHECK (total_rainfall >= 0),
     
     CONSTRAINT pk_weather_data PRIMARY KEY (
         location, date

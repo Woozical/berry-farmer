@@ -55,3 +55,28 @@ So either we'll have the data in history, or the plant will be wilted anyway.
 
 Question is, how to structure this in a relational DB schema? Create a weather averages table?
 Here's where I feel a NoSQL DB would have the advantage.
+---- Rain -> Moisture
+0.0754
+0.0970 mm
+
+24 hour period = 2.33 mm of rain
+On average, 0.09708 mm of rain every hour
+
+
+totalRain * (timeDelta / (seconds in a day))
+2.33 * (3600 / 86400) = 0.09708
+2.33 * (1800 / 86400) = 0.04854
+
+rainPerHour * (timeDelta / (seconds in an hour))
+0.09708 * (1800 / 3600) = 0.04854
+
+Louisiana (Wet state) Gets 4.186mm of rain a day
+			                     2.093mm every 12 hours
+		                       0.174mm every hour
+
+
+Pecha (Water type berry) Loses 30 Moisture an hour	(360 Moisture required over growth period)
+
+1 moisture = 0.01mm of rain?
+
+
