@@ -26,7 +26,7 @@ export default class User {
       `SELECT username, funds ${hideSensitive ? '' : ', email'}
        FROM users WHERE username = $1`, [username]
     );
-    if (result.rows.length < 1) throw new NotFoundError(`No user with username ${username}`);
+    if (result.rowCount < 1) throw new NotFoundError(`No user with username ${username}`);
 
     return {...result.rows[0], funds: Number(result.rows[0].funds)};
   }
@@ -62,7 +62,7 @@ export default class User {
    */
   static async authenticate(username:string, password:string){
     const result = await db.query(`SELECT * FROM users WHERE username = $1`, [username]);
-    if (result.rows.length < 1) throw new NotFoundError(`No user with username ${username}`);
+    if (result.rowCount < 1) throw new NotFoundError(`No user with username ${username}`);
 
     const auth = await bcrypt.compare(password, result.rows[0].password);
     if (auth) {
@@ -90,7 +90,7 @@ export default class User {
       `UPDATE users SET ${setCols} WHERE username = $${values.length+1}
        RETURNING username, email, funds`, [...values, username]
     );
-    if (result.rows.length < 1) throw new NotFoundError(`No user with username ${username}`);
+    if (result.rowCount < 1) throw new NotFoundError(`No user with username ${username}`);
     return {...result.rows[0], funds : Number(result.rows[0].funds)};
   }
 }

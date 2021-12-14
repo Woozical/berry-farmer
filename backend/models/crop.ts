@@ -21,7 +21,7 @@ export default class Crop{
        FROM crops
        WHERE id = $1`, [cropID]
     );
-    if (res.rows.length < 1) throw new NotFoundError(`No crop found with id ${cropID}`);
+    if (res.rowCount < 1) throw new NotFoundError(`No crop found with id ${cropID}`);
     return {
       ...res.rows[0],
       moisture : Number(res.rows[0].moisture),
@@ -50,7 +50,7 @@ export default class Crop{
                  farm_id AS "farmID", farm_x AS "farmX", farm_y AS "farmY"
       `, [...values, cropID]
     );
-    if (res.rows.length < 1) throw new NotFoundError(`No crop found with id ${cropID}`);
+    if (res.rowCount < 1) throw new NotFoundError(`No crop found with id ${cropID}`);
     return {
       ...res.rows[0],
       moisture: Number(res.rows[0].moisture),
