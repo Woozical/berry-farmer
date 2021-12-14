@@ -1,9 +1,7 @@
 "use strict";
-
-
 import Crop from "../../models/crop";
 import { commonAfterAll, commonAfterEach, commonBeforeAll, commonBeforeEach } from "./_testCommon";
-import { NotFoundError } from "../../expressError";
+import { BadRequestError, NotFoundError } from "../../expressError";
 import db from "../../db";
 
 beforeAll(commonBeforeAll);
@@ -22,7 +20,17 @@ describe("Get method", () => {
       health: 100,
       curGrowthStage: 0,
       plantedAt: expect.any(Date),
-      berryType: "cheri",
+      berry: {
+        type: "cheri",
+        growthTime: 3,
+        maxHarvest: 5,
+        size: '20',
+        dryRate: 10,
+        pokeType: 'fire',
+        pokePower: 60,
+        idealTemp: 90,
+        idealCloud: 15
+      },
       farmID: expect.any(Number),
       farmX: expect.any(Number),
       farmY: expect.any(Number)
@@ -32,6 +40,72 @@ describe("Get method", () => {
   it("throws NotFoundError if invalid crop id", async () => {
     try {
       await Crop.get(-1);
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toEqual(true);
+    }
+  });
+});
+
+describe("Calculate moisture level method", () => {
+  it("works with crop ID lookup", async () => {
+    // create control crop
+    const fRes = await db.query("SELECT * FROM farms");
+    const { id:farmID } = fRes.rows[0];
+    const cRes = await db.query(
+      `INSERT INTO crops (berry_type, moisture, farm_id, farm_x, farm_y)
+                   VALUES ('pecha', 100, $1, 2, 2)
+       RETURNING id`, [farmID]);
+    const {id:cropID} = cRes.rows[0];
+    // 100 Moisture after 2 hours (7200 seconds) with 15 dry rate should be near 70
+    expect(await Crop.calcMoisture(7200, {cropID})).toBeCloseTo(70);
+    // Ditto, works with given props if no cropID passed
+    expect(await Crop.calcMoisture(7200, {moisture: 100, dryRate: 15})).toBeCloseTo(70);
+    // Ditto, props from crop lookup supercede any props passed to function
+    expect(await Crop.calcMoisture(7200, {cropID, moisture: 50, dryRate: 30})).toBeCloseTo(70);
+    
+    // 100 Moisture after 2hr 25min (8700 seconds) with 15 dry rate should be near 63.75
+    expect(await Crop.calcMoisture(8700, {cropID})).toBeCloseTo(63.75);
+  });
+
+  it("throws BadRequestError if invalid prop configuration", async () => {
+    // No props
+    try {
+      await Crop.calcMoisture(100, {});
+      fail();
+    } catch (err) {
+      expect (err instanceof BadRequestError).toEqual(true);
+    }
+    // one missing prop
+    try {
+      await Crop.calcMoisture(100, {moisture: 30});
+      fail();
+    } catch (err) {
+      expect (err instanceof BadRequestError).toEqual(true);
+    }
+    try {
+      await Crop.calcMoisture(100, {dryRate: 100});
+      fail();
+    } catch (err) {
+      expect (err instanceof BadRequestError).toEqual(true);
+    }
+  });
+
+  it("does not throw NotFoundError if crop is invalid, but valid calc props are present", async () => {
+    expect(await Crop.calcMoisture(7200, {cropID: -1, moisture: 100, dryRate: 15})).toBeCloseTo(70);
+  });
+
+  it("thows NotFoundError if crop id is invalid and no backup props", async () => {
+    // no props
+    try{
+      await Crop.calcMoisture(500, {cropID: -1});
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toEqual(true);
+    }
+    // missing prop
+    try {
+      await Crop.calcMoisture(500, {cropID: -1, moisture: 50});
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toEqual(true);

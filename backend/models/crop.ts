@@ -1,11 +1,18 @@
 import db from "../db";
-import { NotFoundError } from "../expressError";
+import { BadRequestError, NotFoundError } from "../expressError";
 import { sqlForPartialUpdate } from "../utils/sql";
+import { falsyNoZero } from "../utils/helpers";
 
 interface UpdateProps {
   curGrowthStage?: number,
   health?: number,
   moisture?: number
+}
+
+interface CropMoistureCalcProps {
+  cropID?: number,
+  moisture?: number,
+  dryRate?: number
 }
 
 export default class Crop{
@@ -16,18 +23,58 @@ export default class Crop{
   static async get(cropID:number){
     const res = await db.query(
       `SELECT id, moisture, health, cur_growth_stage AS "curGrowthStage",
-              planted_at AS "plantedAt", berry_type AS "berryType", 
-              farm_id AS "farmID", farm_x AS "farmX", farm_y AS "farmY"
+              planted_at AS "plantedAt", berry_type AS "type", 
+              farm_id AS "farmID", farm_x AS "farmX", farm_y AS "farmY",
+              bp.growth_time AS "growthTime", bp.max_harvest AS "maxHarvest",
+              bp.size, bp.dry_rate AS "dryRate", bp.poke_type AS "pokeType",
+              bp.poke_power AS "pokePower", bp.ideal_cloud AS "idealCloud", bp.ideal_temp AS "idealTemp"
        FROM crops
+       JOIN berry_profiles bp ON bp.name = crops.berry_type
        WHERE id = $1`, [cropID]
     );
     if (res.rowCount < 1) throw new NotFoundError(`No crop found with id ${cropID}`);
+    // Destructure crop data
+    const {id, moisture, health, curGrowthStage, plantedAt, farmID, farmX, farmY} = res.rows[0];
+    // Destructure berry profile data
+    const {type, growthTime, maxHarvest, size, dryRate, pokeType, pokePower, idealCloud, idealTemp} = res.rows[0];
+    // Build and return crop object
     return {
-      ...res.rows[0],
-      moisture : Number(res.rows[0].moisture),
-      health : Number(res.rows[0].health),
+      id, curGrowthStage, plantedAt, farmID, farmX, farmY,
+      moisture : Number(moisture),
+      health : Number(health),
+      berry: {
+        type, growthTime, maxHarvest, size, pokeType, 
+        dryRate: Number(dryRate), pokePower: Number(pokePower),
+        idealCloud: Number(idealCloud), idealTemp: Number(idealTemp)
+      }
     };
   }
+
+  /** Calculates and returns a new moisture level for the given crop.
+   *  moisture (m) = m - (dryRate * (timeDelta / 3600))
+   *  Throws BadRequestError if no valid calculation props
+   * @param timeDelta Amount of time between now and last moisture check (in seconds)
+   * @param cropProps { cropID: lookup props with this ID, moisture: starting moisture, dryRate: dry rate per hour }
+   */
+  static async calcMoisture(timeDelta:number, {cropID, moisture, dryRate}:CropMoistureCalcProps){
+    if (cropID){
+      try {
+        const crop  = await Crop.get(cropID);
+        moisture = crop.moisture;
+        dryRate = crop.berry.dryRate;
+      } catch (err) {
+        if (err instanceof NotFoundError && (falsyNoZero(moisture) || falsyNoZero(dryRate)) ){
+          throw new NotFoundError(`Attempted lookup with invalid crop id ${cropID} with no fallback calculation props.`);
+        }
+      }
+    }
+    if (falsyNoZero(moisture) || falsyNoZero(dryRate)){
+      throw new BadRequestError('Missing dryRate and/or initial moisture for moisture calc. Supply variables or cropID for lookup.');
+    }
+    //@ts-ignore
+    const m = moisture - (dryRate * (timeDelta / 3600));
+    return Math.max(0, m)
+  };
 
   /** Updates crop with given ID with provided data
    *  Returns object with updated crop data
