@@ -1,9 +1,10 @@
 "use strict";
 
-import db from "../../db";
+
+import Crop from "../../models/crop";
 import { commonAfterAll, commonAfterEach, commonBeforeAll, commonBeforeEach } from "./_testCommon";
-import Crop from "../../models/crop"
 import { NotFoundError } from "../../expressError";
+import db from "../../db";
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
