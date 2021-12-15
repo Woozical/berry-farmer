@@ -32,7 +32,7 @@ export default class Crop{
     const res = await db.query(
       `SELECT id, moisture, health, cur_growth_stage AS "curGrowthStage",
               planted_at AS "plantedAt", berry_type AS "type", 
-              farm_id AS "farmID", farm_x AS "farmX", farm_y AS "farmY",
+              farm_id AS "farmID", farm_x AS "x", farm_y AS "y",
               bp.growth_time AS "growthTime", bp.max_harvest AS "maxHarvest",
               bp.size, bp.dry_rate AS "dryRate", bp.poke_type AS "pokeType",
               bp.poke_power AS "pokePower", bp.ideal_cloud AS "idealCloud", bp.ideal_temp AS "idealTemp"
@@ -42,12 +42,12 @@ export default class Crop{
     );
     if (res.rowCount < 1) throw new NotFoundError(`No crop found with id ${cropID}`);
     // Destructure crop data
-    const {id, moisture, health, curGrowthStage, plantedAt, farmID, farmX, farmY} = res.rows[0];
+    const {id, moisture, health, curGrowthStage, plantedAt, farmID, x, y} = res.rows[0];
     // Destructure berry profile data
     const {type, growthTime, maxHarvest, size, dryRate, pokeType, pokePower, idealCloud, idealTemp} = res.rows[0];
     // Build and return crop object
     return {
-      id, curGrowthStage, plantedAt, farmID, farmX, farmY,
+      id, curGrowthStage, plantedAt, farmID, x, y,
       moisture : Number(moisture),
       health : Number(health),
       berry: {
@@ -102,7 +102,7 @@ export default class Crop{
        WHERE id = $${values.length+1}
        RETURNING id, moisture, health, cur_growth_stage AS "curGrowthStage",
                  planted_at AS "plantedAt", berry_type AS "berryType",
-                 farm_id AS "farmID", farm_x AS "farmX", farm_y AS "farmY"
+                 farm_id AS "farmID", farm_x AS "x", farm_y AS "y"
       `, [...values, cropID]
     );
     if (res.rowCount < 1) throw new NotFoundError(`No crop found with id ${cropID}`);
@@ -122,7 +122,7 @@ export default class Crop{
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id, berry_type AS "berryType", moisture, health, planted_at AS "plantedAt",
                    cur_growth_stage AS "curGrowthStage", farm_id AS "farmID",
-                   farm_x AS "farmX", farm_y AS "farmY"`,
+                   farm_x AS "x", farm_y AS "y"`,
         [farmID, farmX, farmY, berryType, curGrowthStage]
       );
       return {

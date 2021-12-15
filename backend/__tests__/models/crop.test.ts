@@ -32,8 +32,8 @@ describe("Get method", () => {
         idealCloud: 15
       },
       farmID: expect.any(Number),
-      farmX: expect.any(Number),
-      farmY: expect.any(Number)
+      x: expect.any(Number),
+      y: expect.any(Number)
     });
   });
 
@@ -131,8 +131,8 @@ describe("Update method", () => {
       plantedAt : expect.any(Date),
       berryType: "chesto",
       farmID : expect.any(Number),
-      farmX: expect.any(Number),
-      farmY: expect.any(Number),
+      x: expect.any(Number),
+      y: expect.any(Number),
     });
     
     // changes reflect in DB
@@ -197,14 +197,14 @@ describe("create method", () => {
       plantedAt: expect.any(Date),
       curGrowthStage: 0,
       farmID,
-      farmX: 2,
-      farmY: 2
+      x: 2,
+      y: 2
     });
     // changes reflect in database
     const n = await db.query("SELECT * FROM crops WHERE id = $1", [res.id]);
     expect(n.rows[0].farm_id).toEqual(res.farmID);
-    expect(n.rows[0].farm_x).toEqual(res.farmX);
-    expect(n.rows[0].farm_y).toEqual(res.farmY);
+    expect(n.rows[0].farm_x).toEqual(res.x);
+    expect(n.rows[0].farm_y).toEqual(res.y);
 
     // works with curGrowthStage override
     const res2 = await Crop.create({
