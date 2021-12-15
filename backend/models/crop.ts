@@ -15,6 +15,14 @@ interface CropMoistureCalcProps {
   dryRate?: number
 }
 
+interface CropCreateProps {
+  farmID: number,
+  farmX: number,
+  farmY: number,
+  berryType: string,
+  curGrowthStage? : number
+}
+
 export default class Crop{
   /** Finds crop with given ID in database
    *  Returns { id, moisutre, health, curGrowthStage, plantedAt, berryType, farmID, farmX, farmY }
@@ -64,7 +72,7 @@ export default class Crop{
         dryRate = crop.berry.dryRate;
       } catch (err) {
         if (err instanceof NotFoundError && (falsyNoZero(moisture) || falsyNoZero(dryRate)) ){
-          throw new NotFoundError(`Attempted lookup with invalid crop id ${cropID} with no fallback calculation props.`);
+          throw new NotFoundError(`Attempted lookup of invalid crop id ${cropID} with no fallback calculation props.`);
         }
       }
     }
@@ -103,5 +111,43 @@ export default class Crop{
       moisture: Number(res.rows[0].moisture),
       health: Number(res.rows[0].health)
     };
+  }
+  /** Creates a new crop with given data
+   *  Throws BadRequestError on duplicate farm coordinates, invalid berry type or invalid farm id
+   */
+  static async create({berryType, farmID, farmX, farmY, curGrowthStage=0}:CropCreateProps){
+    try {
+      const res = await db.query(
+        `INSERT INTO crops (farm_id, farm_x, farm_y, berry_type, cur_growth_stage)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, berry_type AS "berryType", moisture, health, planted_at AS "plantedAt",
+                   cur_growth_stage AS "curGrowthStage", farm_id AS "farmID",
+                   farm_x AS "farmX", farm_y AS "farmY"`,
+        [farmID, farmX, farmY, berryType, curGrowthStage]
+      );
+      return {
+        ...res.rows[0],
+        moisture: Number(res.rows[0].moisture),
+        health: Number(res.rows[0].health)
+      };
+    } catch (err:any) {
+      if (err.code && err.code === '23505') throw new BadRequestError(`Duplicate farm coordinates (${farmX}, ${farmY})`);
+      if (err.code && err.code === '23503'){
+        const msg = err.constraint === 'crops_berry_type_fkey' ? `Invalid berry type ${berryType}` : `Invalid farm id ${farmID}`;
+        throw new BadRequestError(msg);
+      };
+      throw err;
+    }
+  }
+  /** Deletes crop with given id.
+   *  Throws NotFoundError if no crop with such id.
+   */
+  static async delete(cropID:number){
+    const res = await db.query(
+      `DELETE FROM crops WHERE id = $1 RETURNING id`, [cropID]
+    );
+    if (res.rowCount < 1) throw new NotFoundError(`No crop with id ${cropID}`);
+
+    return { deleted : cropID };
   }
 }

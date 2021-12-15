@@ -28,9 +28,9 @@ async function commonBeforeAll(){
   /** seed berry_profiles */
   await db.query(
     `INSERT INTO berry_profiles (name, growth_time, size, dry_rate, poke_type, poke_power, ideal_temp, ideal_cloud)
-    VALUES ('cheri', 3, 20, 10, 'fire', 60, 90, 15),
-           ('chesto', 3, 80, 30, 'water', 60, 70, 15),
-           ('pecha', 3, 40, 15, 'electric', 60, 70, 70)`
+     VALUES ('cheri', 3, 20, 10, 'fire', 60, 90, 15),
+            ('chesto', 3, 80, 30, 'water', 60, 70, 15),
+            ('pecha', 3, 40, 15, 'electric', 60, 70, 70)`
   );
 
   /** seed geo_profiles */
@@ -63,19 +63,19 @@ async function commonBeforeAll(){
   /** seed weather_data */
   await db.query(
     `INSERT INTO weather_data (location, date, avg_temp, avg_cloud, total_rainfall)
-                 VALUES ($1, '2010-01-10', 10, 0.1, 1.0 ),
-                        ($1, '2011-11-11', 11, 1.1, 1.1 ),
-                        ($2, '2020-02-20', 20, 0.2, 2.0 ),
-                        ($2, '2020-12-12', 12, 1.2, 1.2)`,
+     VALUES ($1, '2010-01-10', 10, 0.1, 1.0 ),
+            ($1, '2011-11-11', 11, 1.1, 1.1 ),
+            ($2, '2020-02-20', 20, 0.2, 2.0 ),
+            ($2, '2020-12-12', 12, 1.2, 1.2)`,
     locationIDs
   );
 
   /** seed user inventories */
   await db.query(
     `INSERT INTO user_inventories (username, berry_type, amount)
-                 VALUES ('u1', 'cheri', 1),
-                        ('u2', 'chesto', 2),
-                        ('u3', 'pecha', 3)`
+     VALUES ('u1', 'cheri', 1),
+            ('u2', 'chesto', 2),
+            ('u3', 'pecha', 3)`
   );
 }
 

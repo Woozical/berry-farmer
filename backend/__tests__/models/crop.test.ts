@@ -42,7 +42,7 @@ describe("Get method", () => {
       await Crop.get(-1);
       fail();
     } catch (err) {
-      expect(err instanceof NotFoundError).toEqual(true);
+      expect(err).toBeInstanceOf(NotFoundError);
     }
   });
 });
@@ -77,20 +77,20 @@ describe("Calculate moisture level method", () => {
       await Crop.calcMoisture(100, {});
       fail();
     } catch (err) {
-      expect (err instanceof BadRequestError).toEqual(true);
+      expect(err).toBeInstanceOf(BadRequestError);
     }
     // one missing prop
     try {
       await Crop.calcMoisture(100, {moisture: 30});
       fail();
     } catch (err) {
-      expect (err instanceof BadRequestError).toEqual(true);
+      expect(err).toBeInstanceOf(BadRequestError);
     }
     try {
       await Crop.calcMoisture(100, {dryRate: 100});
       fail();
     } catch (err) {
-      expect (err instanceof BadRequestError).toEqual(true);
+      expect(err).toBeInstanceOf(BadRequestError);
     }
   });
 
@@ -104,14 +104,14 @@ describe("Calculate moisture level method", () => {
       await Crop.calcMoisture(500, {cropID: -1});
       fail();
     } catch (err) {
-      expect(err instanceof NotFoundError).toEqual(true);
+      expect(err).toBeInstanceOf(NotFoundError);
     }
     // missing prop
     try {
       await Crop.calcMoisture(500, {cropID: -1, moisture: 50});
       fail();
     } catch (err) {
-      expect(err instanceof NotFoundError).toEqual(true);
+      expect(err).toBeInstanceOf(NotFoundError);
     }
   });
 });
@@ -153,7 +153,98 @@ describe("Update method", () => {
     try {
       await Crop.update(-1, { moisture: 500 })
     } catch (err) {
-      expect(err instanceof NotFoundError).toEqual(true);
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  });
+});
+
+describe("delete method", () => {
+  it("should delete crop from db", async () => {
+    const q = await db.query("SELECT * FROM crops");
+    const { id: cropID } = q.rows[0];
+    const res = await Crop.delete(cropID);
+    expect(res).toEqual({ deleted: cropID });
+
+    const q2 = await db.query("SELECT * FROM crops WHERE id = $1", [cropID]);
+    expect(q2.rowCount).toEqual(0);
+  });
+
+  it("should throw NotFoundError if invalid crop id", async () => {
+    try {
+      await Crop.delete(-1);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  });
+})
+
+describe("create method", () => {
+  it("should create new crop in db", async () => {
+    const q = await db.query("SELECT * FROM farms");
+    const { id:farmID } = q.rows[0];
+    const res = await Crop.create({
+      berryType: "cheri",
+      farmID,
+      farmX: 2,
+      farmY: 2
+    });
+    expect(res).toEqual({
+      id: expect.any(Number),
+      berryType: "cheri",
+      moisture: 0,
+      health: 100,
+      plantedAt: expect.any(Date),
+      curGrowthStage: 0,
+      farmID,
+      farmX: 2,
+      farmY: 2
+    });
+    // changes reflect in database
+    const n = await db.query("SELECT * FROM crops WHERE id = $1", [res.id]);
+    expect(n.rows[0].farm_id).toEqual(res.farmID);
+    expect(n.rows[0].farm_x).toEqual(res.farmX);
+    expect(n.rows[0].farm_y).toEqual(res.farmY);
+
+    // works with curGrowthStage override
+    const res2 = await Crop.create({
+      berryType: "cheri",
+      farmID,
+      farmX: 3,
+      farmY: 3,
+      curGrowthStage: 2
+    });
+    expect(res2.curGrowthStage).toEqual(2);
+  });
+
+  it("throws BadRequestError on dupe farm coords", async () => {
+    const q = await db.query("SELECT * FROM farms WHERE owner = 'u1'");
+    const { id:farmID } = q.rows[0];
+    try {
+      await Crop.create({berryType: "cheri", farmID, farmX: 0, farmY: 0});
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError on invalid berry type", async () => {
+    const q = await db.query("SELECT * FROM farms WHERE owner = 'u1'");
+    const { id:farmID } = q.rows[0];
+    try {
+      await Crop.create({berryType: "dontexist", farmID, farmX: 9, farmY: 9});
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError on invalid farm ID", async () => {
+    try {
+      await Crop.create({berryType: "cheri", farmID: -1, farmX: 99, farmY: 99});
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
     }
   });
 });
