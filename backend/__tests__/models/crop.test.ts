@@ -47,6 +47,31 @@ describe("Get method", () => {
   });
 });
 
+describe("Calculate new health method", () => {
+  it("calculates moisture health adjustment correctly", () => {
+    const params = { health: 0, avgTemp: 0, avgCloud: 0, idealTemp: 100, idealCloud: 100 };
+    expect(Crop.calcHealth({...params, moisture: 100 })).toEqual(25);
+    expect(Crop.calcHealth({...params, moisture: 80 })).toEqual(5);
+    expect(Crop.calcHealth({...params, moisture: 75 })).toEqual(0);
+  });
+
+  it("calculates weather modifiers correctly", () => {
+    const params = {health: 10, moisture: 75};
+    expect(Crop.calcHealth({...params, idealTemp: 1, idealCloud: 1, avgCloud: 1, avgTemp: 1}))
+    .toBeCloseTo(11.75);
+    expect(Crop.calcHealth({...params, idealTemp: 1, avgTemp: 1.259, idealCloud: 1, avgCloud: 1.318}))
+    .toBeCloseTo(10);
+  });
+
+  it("accumulates all factors correctly", () => {
+    const params = { health: 10, moisture: 100 };
+    expect(Crop.calcHealth({...params, idealTemp: 1, avgTemp: 1.259, idealCloud: 1, avgCloud: 1.318}))
+    .toBeCloseTo(35);
+    expect(Crop.calcHealth({...params, idealTemp: 1, avgTemp: 1, idealCloud: 1, avgCloud: 1}))
+    .toBeCloseTo(11.75+25);
+  });
+});
+
 describe("Calculate moisture level method", () => {
   it("works with crop ID lookup", async () => {
     // create control crop

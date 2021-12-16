@@ -63,11 +63,9 @@ async function commonBeforeAll(){
   /** seed weather_data */
   await db.query(
     `INSERT INTO weather_data (location, date, avg_temp, avg_cloud, total_rainfall)
-     VALUES ($1, '2010-01-10', 10, 0.1, 1.0 ),
-            ($1, '2011-11-11', 11, 1.1, 1.1 ),
-            ($2, '2020-02-20', 20, 0.2, 2.0 ),
-            ($2, '2020-12-12', 12, 1.2, 1.2)`,
-    locationIDs
+     VALUES ($1, $3, 10, 0.1, 1.0 ),
+            ($2, $3, 20, 0.2, 2.0 )`,
+    [...locationIDs, new Date()]
   );
 
   /** seed user inventories */

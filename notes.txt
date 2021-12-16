@@ -79,4 +79,32 @@ Pecha (Water type berry) Loses 30 Moisture an hour	(360 Moisture required over g
 
 1 moisture = 0.01mm of rain?
 
+calcGrowth
+input {  health, moisture, idealTemp, idealCloud, avgTemp, avgCloud } 
 
+tempAvg = 100, idealTemp = 70
+tempFactor = (100 / 70) - 1 = 0.42857...
+
+tempMod = cos(0.42857) * 6 - 4.8 = 0.6574  // (bonus for within 26% of ideal)
+cloudMod = cos(cloudFactor) * 3 - 1.85 // bonus for within 32% of ideal
+
+moisture = flat health adjustment
+95 < moisture < 105 = +25 health
+90 < moisture < 95 || 105 < moisture < 110 = +20 health
+85-90 = +15 || 110-112
+80-85 = +10 || 112-114
+75-80 = +05 || 114-116
+70-75 + 0 || 116-118
+65-70 = -05 || 118-120
+60-65 = -10 || 120-122
+55-60 = -15 || 122-124
+50-55 = -20 | 124-126
+45-50 = -25 || 126-128
+40-45 = -30 || 128-130
+35-40 = -35 || 130-132
+30-35 = -40 || 132-134
+25-30 = -45 || 134-136
+< 25 = -50  || 136-138
+	    || continues...
+
+output (health * avg of temp and cloud mod) + moisture adjustment

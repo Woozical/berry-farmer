@@ -23,6 +23,15 @@ interface CropCreateProps {
   curGrowthStage? : number
 }
 
+interface CropGrowthCalcProps {
+  health: number,
+  moisture: number,
+  idealTemp: number,
+  idealCloud: number,
+  avgTemp: number,
+  avgCloud: number
+}
+
 export default class Crop{
   /** Finds crop with given ID in database
    *  Returns { id, moisutre, health, curGrowthStage, plantedAt, berryType, farmID, farmX, farmY }
@@ -56,6 +65,32 @@ export default class Crop{
         idealCloud: Number(idealCloud), idealTemp: Number(idealTemp)
       }
     };
+  }
+  /** Calculates the new health of a crop upon reaching a growth stage, using weather data
+   *  moisture, and health at the point of growth.
+   */
+  static calcHealth({ health, moisture, idealTemp, idealCloud, avgTemp, avgCloud }:CropGrowthCalcProps){
+    // +/- 32% of ideal, 1.0x to 1.15x bonus
+    // Past +/- 32% of ideal, gradual decline from 1.0x to 0x modifier
+    const cloudMod = Math.max(0, (Math.cos((avgCloud / idealCloud) - 1) * 3 - 1.85)); 
+    // As above with +/- 26% range, up to 1.2x bonus
+    const tempMod = Math.max(0, (Math.cos(avgTemp / idealTemp - 1) * 6 - 4.8));
+
+    // Starting at 95-105 moisture, +25 health adjustment
+    // From there, every +/- 5 moisture, health adjustment is reduced by 5
+    // Above 110 moisture, health adjustment is reduced by 5 for every 2 excess moisture, scaling infinitely
+    // Below 20 moisture, health adjustment is capped at -50
+    let healthAdj;
+    if (moisture > 110){
+      healthAdj = 15 - (5 * Math.floor((moisture-110) * 0.5));
+    } else if (moisture <= 20){
+      healthAdj = -50;
+    } else {
+      healthAdj = 25 - (5 * Math.floor(Math.abs(100-moisture) * 0.2));
+    }
+    // Adjust current health by the average of our two weather modifiers, then apply health adjustment (determined by moisture)
+    const newHealth = (health * ((cloudMod + tempMod) * 0.5)) + healthAdj;
+    return Math.min(100, (Math.max(0, newHealth)));
   }
 
   /** Calculates and returns a new moisture level for the given crop.
