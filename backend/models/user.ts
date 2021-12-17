@@ -90,7 +90,64 @@ export default class User {
       `UPDATE users SET ${setCols} WHERE username = $${values.length+1}
        RETURNING username, email, funds`, [...values, username]
     );
-    if (result.rowCount < 1) throw new NotFoundError(`No user with username ${username}`);
+    if (result.rowCount < 1) throw new BadRequestError(`No user with username ${username}`);
     return {...result.rows[0], funds : Number(result.rows[0].funds)};
+  }
+
+  /** Private helper methods for UPDATE and INSERT operations on user_inventories table */
+  private static async invBerryInsert(username: string, berryType: string, amount: number){
+    const res = await db.query(
+      `INSERT INTO user_inventories (username, berry_type, amount)
+       VALUES ($1, $2, $3)`, [username, berryType, amount]
+    );
+    return res;
+  };
+
+  private static async invBerryUpdate(username: string, berryType: string, amount: number){
+    const res = await db.query(
+      `UPDATE user_inventories
+       SET amount = (amount + $1)
+       WHERE username = $2 AND berry_type = $3`,
+       [amount, username, berryType]
+    );
+    return res;
+  }
+
+  /** Increments by provided amount for user and berry type on user_inventories table.
+   *  Amount must be positive. Performs UPDATE if row already exists. INSERTs if not.
+   *  Throws BadRequestError on non-positive amount or bad foreign keys.
+   * */
+  static async addBerry(username: string, berryType: string, amount: number){
+    if (amount < 0) throw new BadRequestError("Berry amount must be positive.");
+    try {
+      const res = await User.invBerryUpdate(username, berryType, amount);
+      if (res.rowCount < 1) await User.invBerryInsert(username, berryType, amount);
+    } catch (err:any) {
+      if (err.code && err.code === '23503'){
+        const msg = err.constraint.includes('berry_type') ?
+                      `Invalid berry type ${berryType}` : `Invalid username ${username}`;
+        throw new BadRequestError(msg);
+      }
+      throw err;
+    }
+  }
+  /** Decrements by provided amount for user and berry type on user_inventories table.
+   *  Amount must be negative. Provided amount can not drop the db's amount below zero.
+   *  Throws BadRequestError on non-negative amount, excessive amount, or bad foreign keys.
+   * */
+  static async deductBerry(username:string, berryType:string, amount: number){
+    if (amount > 0) throw new BadRequestError("Berry amount must be negative");
+    try {
+      const res = await User.invBerryUpdate(username, berryType, amount);
+      if (res.rowCount < 1) throw new BadRequestError(`Invalid username ${username} or berryType ${berryType}`);
+    } catch (err:any) {
+      if (err instanceof BadRequestError) throw err
+      else if (err.constraint && err.constraint === 'positive_amount'){
+        const d = err.detail.lastIndexOf('-');
+        const p = err.detail.lastIndexOf(')');
+        const n = Number(err.detail.slice(d+1, p))
+        throw new BadRequestError(`Final amount may not be below zero. Try deducting by ${Math.abs(amount) - n} `);
+      }
+    }
   }
 }

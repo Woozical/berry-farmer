@@ -93,12 +93,12 @@ describe("Update method", () => {
     expect(db2.funds).toEqual("15");
   });
 
-  it("throws NotFoundError if given invalid username", async () => {
+  it("throws BadRequestError if given invalid username", async () => {
     try {
       await User.update("idontexist", { funds: 500 });
       fail();
     } catch (err) {
-      expect(err instanceof NotFoundError).toEqual(true);
+      expect(err instanceof BadRequestError).toEqual(true);
     }
   });
 });
@@ -120,6 +120,95 @@ describe("Get method", () => {
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toEqual(true);
+    }
+  });
+});
+
+describe("Add Berry method", () => {
+  it("creates new rows on user_inventories", async () => {
+    await User.addBerry("u1", "chesto", 2);
+    
+    // changes reflect in db
+    const q = await db.query("SELECT amount FROM user_inventories WHERE username = 'u1' AND berry_type = 'chesto' ");
+    expect(q.rows[0].amount).toEqual(2);
+  });
+
+  it("works with existing rows on user_inventories", async () => {
+    await User.addBerry("u1", "cheri", 5);
+    // changes reflect in db
+    const q = await db.query("SELECT amount FROM user_inventories WHERE username = 'u1' AND berry_type = 'cheri' ");
+    expect(q.rows[0].amount).toEqual(6);
+  });
+
+  it("throws BadRequestError if invalid username", async () => {
+    try {
+      await User.addBerry("idontexist", "cheri", 3);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if amount is not positive", async () => {
+    try {
+      await User.addBerry("u1", "pecha", -2);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if invalid berry type", async () => {
+    try {
+      await User.addBerry("u1", "idontexist", 3);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+});
+
+describe("Deduct Berry method", () => {
+  it("works with existing rows on user_inventories", async () => {
+    await User.deductBerry("u1", "cheri", -1);
+    // changes reflect in db
+    const q = await db.query("SELECT amount FROM user_inventories WHERE username = 'u1' AND berry_type = 'cheri' ");
+    expect(q.rows[0].amount).toEqual(0);
+  });
+
+  it("throws BadRequestError if invalid username", async () => {
+    try {
+      await User.deductBerry("idontexist", "cheri", 3);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if db amount drops below 0", async () => {
+    try {
+      await User.deductBerry("u1", "cheri", -99);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if amount is not negative", async () => {
+    try {
+      await User.deductBerry("u1", "cheri", 2);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if invalid berry type", async () => {
+    try {
+      await User.deductBerry("u1", "idontexist", -1);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
     }
   });
 });
