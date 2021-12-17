@@ -89,7 +89,11 @@ export default class Crop{
       healthAdj = 25 - (5 * Math.floor(Math.abs(100-moisture) * 0.2));
     }
     // Adjust current health by the average of our two weather modifiers, then apply health adjustment (determined by moisture)
-    const newHealth = (health * ((cloudMod + tempMod) * 0.5)) + healthAdj;
+    const newHealth = Math.min(100,
+                        Math.max(0,
+                          (health * ((cloudMod + tempMod) - 1)
+                        ))
+                      ) + healthAdj;
     return Math.min(100, (Math.max(0, newHealth)));
   }
 
@@ -99,6 +103,8 @@ export default class Crop{
    * @param timeDelta Amount of time between now and last moisture check (in seconds)
    * @param cropProps { cropID: lookup props with this ID, moisture: starting moisture, dryRate: dry rate per hour }
    */
+
+  // TO DO: Perform all moisture calculations here, including rain and irrigation adjustments
   static async calcMoisture(timeDelta:number, {cropID, moisture, dryRate}:CropMoistureCalcProps){
     if (cropID){
       try {

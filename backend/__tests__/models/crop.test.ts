@@ -58,17 +58,19 @@ describe("Calculate new health method", () => {
   it("calculates weather modifiers correctly", () => {
     const params = {health: 10, moisture: 75};
     expect(Crop.calcHealth({...params, idealTemp: 1, idealCloud: 1, avgCloud: 1, avgTemp: 1}))
-    .toBeCloseTo(11.75);
+    .toBeCloseTo(13.5);
     expect(Crop.calcHealth({...params, idealTemp: 1, avgTemp: 1.259, idealCloud: 1, avgCloud: 1.318}))
-    .toBeCloseTo(10);
+    .toBeCloseTo(10, 1);
+    expect(Crop.calcHealth({...params, idealTemp: 100, avgTemp: -20, idealCloud: 1, avgCloud: 1.318 }))
+    .toEqual(0);
   });
 
   it("accumulates all factors correctly", () => {
     const params = { health: 10, moisture: 100 };
     expect(Crop.calcHealth({...params, idealTemp: 1, avgTemp: 1.259, idealCloud: 1, avgCloud: 1.318}))
-    .toBeCloseTo(35);
+    .toBeCloseTo(35, 1);
     expect(Crop.calcHealth({...params, idealTemp: 1, avgTemp: 1, idealCloud: 1, avgCloud: 1}))
-    .toBeCloseTo(11.75+25);
+    .toBeCloseTo(13.5+25);
   });
 });
 
