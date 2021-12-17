@@ -108,48 +108,112 @@ export default class Farm{
     }
   }
 
-  static async syncCrops(farmID:number){
+
+  /** This method is responsible for querying database, cleaning and returning 
+   *  applicable information for a crop sync operation on a given farm.
+   */
+  private static async pullSyncData(farmID:number){
     // Query for required crop and berry data
     const cropRes = await db.query(
-      `SELECT crops.id, crops.cur_growth_stage AS "curGrowthStage", crops.moisture, crops.planted_at AS "plantedAt",
+      `SELECT crops.id, crops.cur_growth_stage AS "curGrowthStage", crops.moisture, crops.planted_at AS "plantedAt", crops.health,
               bp.growth_time AS "growthTime", bp.dry_rate AS "dryRate", bp.ideal_temp as "idealTemp", bp.ideal_cloud AS "idealCloud",
-              farms.irrigation_lvl AS "irrigationLVL, farms.last_checked_at AS "lastCheckedAt", farms.location,
-              wd.avg_temp AS "avgTemp", wd.avg_cloud AS "avgCloud", wd.total_rainfall AS "totalRain"
-       FROM crops
-       JOIN berry_profiles bp ON bp.name = crops.berry_type
-       JOIN farms ON farms.id = crops.farm_id
-       JOIN weather_data wd ON farms.location = wd.location
-       WHERE farms.id = $1`, [farmID]
+              farms.irrigation_lvl AS "irrigationLVL", farms.last_checked_at AS "lastCheckedAt", farms.location, farms.owner
+        FROM crops
+        JOIN berry_profiles bp ON bp.name = crops.berry_type
+        JOIN farms ON farms.id = crops.farm_id
+        WHERE farms.id = $1`, [farmID]
     );
-
+    if (cropRes.rowCount < 1) throw new NotFoundError(`No farm found with id ${farmID}`);
     // Query for weather data on this farm's location
     const weatherRes = await db.query(
-      `SELECT wd.date, wd.avg_temp AS "avgTemp", wd.avg_cloud AS "avgCloud", wd.total_rainfall AS "totalRainfall"
-       FROM weather_data wd
-       JOIN farms ON wd.location = farms.location
-       WHERE farms.id = $1`, [farmID]
+      `SELECT wd.date, wd.avg_temp AS "avgTemp", wd.avg_cloud AS "avgCloud", wd.total_rainfall AS "totalRain"
+        FROM weather_data wd
+        JOIN farms ON wd.location = farms.location
+        WHERE farms.id = $1`, [farmID]
     );
 
     // Clean query responses
-    const crops = cropRes.rows.map( ({id, curGrowthStage, moisture, plantedAt, growthTime, dryRate, idealTemp, idealCloud}) => {
+    const crops = cropRes.rows.map( ({id, health, curGrowthStage, moisture, plantedAt, growthTime, dryRate, idealTemp, idealCloud}) => {
       return {
-        id, curGrowthStage, moisture: Number(moisture), plantedAt, growthTime,
+        id, curGrowthStage, moisture: Number(moisture), plantedAt, growthTime, health: Number(health),
         dryRate: Number(dryRate), idealTemp: Number(idealTemp), idealCloud: Number(idealCloud)}
     });
     const weatherData = new Map();
     weatherRes.rows.forEach( ({date, avgTemp, avgCloud, totalRain}) => {
-      weatherData.set(date, {
+      weatherData.set(date.toDateString(), {
         avgTemp: Number(avgTemp), avgCloud: Number(avgCloud), totalRain: Number(totalRain)
       });
     });
-    const { irrigationLVL, lastCheckedAt, location } = cropRes.rows[0];
+    const { irrigationLVL, lastCheckedAt, location, owner } = cropRes.rows[0];
 
-    const today = new Date(new Date().toDateString()); // Get today's date with no time (00:00:00)
-    const timeDelta = (Date.now() - lastCheckedAt.getTime()) * 0.001; // Convert ms to seconds
+    return { weatherData, crops, irrigationLVL, lastCheckedAt, location, owner };
 
-    for (let crop of crops){
-      const newMoisture = await Crop.calcMoisture(timeDelta, {cropID: crop.id});
-      await Crop.update(crop.id, {moisture: newMoisture});
+  }
+
+  static async syncCrops(farmID:number){
+    const data = await Farm.pullSyncData(farmID);
+
+    const today = new Date().toDateString(); // Get today's date with no time (00:00:00)
+    const now = Date.now();
+
+    // Sync each crop
+    for (let crop of data.crops){
+      /** Ignore fully grown crops. TO DO: Re-plant crops older than 2+ days */
+      if (crop.curGrowthStage === 4){
+        continue
+      }
+
+      const plantedTimeMS = crop.plantedAt.getTime();
+      const growthTimeMS = (crop.growthTime * 3600000); // Convert hour -> ms
+      // Determine how many growths occured between last growth and now
+      const numGrowths = Math.floor(((now - plantedTimeMS) - (crop.curGrowthStage * growthTimeMS)) / growthTimeMS);
+      
+      // Perform each growth
+      for (let i = 0; i < numGrowths; i++){
+        if (crop.curGrowthStage === 4) break;
+        // Get time info at point of new growth
+        const nextGrowthTime = plantedTimeMS + (growthTimeMS * (crop.curGrowthStage + 1));
+        const growthDelta =  ((nextGrowthTime - data.lastCheckedAt.getTime()) - (i * growthTimeMS)) * 0.001; // ms -> seconds
+        const dateOfGrowth = new Date(nextGrowthTime).toDateString();
+
+        // Dehydrate at point of new growth
+        let growthMoisture = await Crop.calcMoisture(growthDelta, {dryRate: crop.dryRate, moisture: crop.moisture });
+        const { avgTemp, avgCloud, totalRain } = data.weatherData.get(dateOfGrowth);
+        // Add rain at point of new growth
+        growthMoisture += (totalRain * (growthDelta / 86400)) * 100;
+        // For each irrigation lvl, 20% of difference between max and current moisture is made up for
+        growthMoisture += (data.irrigationLVL * 0.2) * (100 - growthMoisture);
+        // Perform growth health calculations
+        const growthHealth = Crop.calcHealth({
+          health: crop.health, avgTemp, avgCloud, moisture: growthMoisture,
+          idealTemp: crop.idealTemp, idealCloud: crop.idealCloud
+        });
+        // Update with new data
+        crop.health = growthHealth;
+        crop.moisture = growthMoisture;
+        crop.curGrowthStage += 1;
+      }
+
+      // If we grew to stage 4 as part of this sync, update now and ignore remainder time operations
+      if (crop.curGrowthStage === 4){
+        await Crop.update(crop.id, {health: crop.health, curGrowthStage: crop.curGrowthStage, moisture: crop.moisture});
+        continue;
+      }
+
+      /** Perform remainder operations between now and latest growth/checkedAt */
+      const timeDelta = (numGrowths > 0) ?
+      (now - (plantedTimeMS + (growthTimeMS * crop.curGrowthStage))) * 0.001 :
+      (now - data.lastCheckedAt.getTime()) * 0.001; // Convert ms -> seconds
+
+      // Get baseline new moisture from dehydration
+      let newMoisture = await Crop.calcMoisture(timeDelta, {dryRate: crop.dryRate, moisture: crop.moisture});
+      // Account for rain, adjusted by time delta, where 0.01mm rainfall = 1 moisture
+      newMoisture += (data.weatherData.get(today).totalRain * (timeDelta / 86400)) * 100;
+      
+      await Crop.update(crop.id, {health: crop.health, curGrowthStage: crop.curGrowthStage, moisture: newMoisture});
+
     }
+    // TO DO: Make use of update method here once implemented
+    await db.query('UPDATE farms SET last_checked_at = $1 WHERE id = $2', [new Date(now), farmID]);
   }
 }

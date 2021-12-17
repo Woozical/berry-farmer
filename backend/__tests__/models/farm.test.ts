@@ -13,11 +13,36 @@ afterEach(commonAfterEach);
 
 /** Expected Farm response object for farm owned by user 'u1' */
 const expectFarmObj = {
-  length: 3,width: 3,
+  length: 3, width: 3,
   irrigationLVL: 0, lastCheckedAt: expect.any(Date),
   locationName: 'London', locationRegion: 'England',
   locationCountry: 'United Kingdom',
 }
+
+describe("smoke tests", () => {
+  let id:number, location:number;
+  beforeAll( async () => {
+    const q = await db.query("SELECT * FROM farms");
+    id = q.rows[0].id;
+    const q2 = await db.query("SELECT * FROM geo_profiles");
+    location = q2.rows[0].id;
+  });
+  test("get method", async () => {
+    await Farm.get(id);
+  });
+  test("get by owner method", async () => {
+    await Farm.getByOwner("u1");
+  });
+  test("cropSync method", async () => {
+    await Farm.syncCrops(id);
+  })
+  test("create method", async () => {
+    await Farm.create({ owner: "u1", location });
+  });
+  test("delete method", async () => {
+    await Farm.delete(id);
+  });
+});
 
 describe("Get method", () => {
   it("retrieves full farm data by ID", async () => {
@@ -129,67 +154,197 @@ describe("Delete method", () => {
   });
 });
 
-describe("date match test", () => {
-  it("works", async () => {
-    const today = new Date();
-    const q = await db.query("SELECT id FROM geo_profiles");
-    const { id: location } = q.rows[0];
-    const q2 = await db.query(
+
+describe("Crop sync method", () => {
+  /** Define constants */
+  const hour = 3600000;
+  const today = new Date();
+  const yesterday = new Date(today.getTime() - (hour * 24));
+  let location:number, farmID:number;
+
+  beforeAll( async () => {
+    /** Seed common control parameters */
+    // Control location (to avoid weather_data violations on existing locations in test db)
+    let q = await db.query(`
+      INSERT INTO geo_profiles (name, region, country)
+      VALUES ('Control Town', 'North Controlina', 'Controlada')
+      RETURNING id`);
+    location = q.rows[0].id;
+    // Weather Data: 60 Avg Temp and Cloud for today and yesterday, 1mm of rainfall
+    await db.query(
       `INSERT INTO weather_data (location, date, avg_temp, avg_cloud, total_rainfall)
-       VALUES ($1, $2, 20, 20, 20)`, [location, today]
+        VALUES ($1, $2, 60, 60, 1),
+               ($1, $3, 60, 60, 1)`,
+      [location, today, yesterday]);
+    // Control user
+    await db.query(
+      `INSERT INTO users (username, email, password)
+       VALUES ('controlUser', 'cu@mail.com', 'password')`
     );
-    const q3 = await db.query("SELECT location, date FROM weather_data WHERE location = $1 AND date = $2", [location, today]);
-    expect(q3.rows[0].date).toEqual(new Date(today.toDateString()));
-  });
-})
+    // Control farm
+    q = await db.query(
+      `INSERT INTO farms (owner, location)
+        VALUES ('controlUser', $1) RETURNING id`,
+        [location]
+    );
+    farmID = q.rows[0].id;
+  })
 
-// describe("Crop sync method", () => {
-
-//   it("updates crops", async () => {
-//     // Get snapshot of previous crop state
-//     const snapshot = await db.query("SELECT * FROM crops WHERE berry_type = 'cheri' ");
-//     // Set a control date for time delta operations
-//     await db.query('UPDATE farms SET last_checked_at = $1 WHERE id = $2',
-//       [new Date('2021-12-10T03:24:00'), snapshot.rows[0].farm_id]);
+  it("test 1: cgs 0, timeDelta does not reach growth stage", async () => {
+    // Control crops
+    const plantedAt = new Date(today.getTime() - (hour * 2));
+    await db.query(
+      `INSERT INTO crops (berry_type, cur_growth_stage, health, moisture, planted_at, farm_id, farm_x, farm_y)
+       VALUES ('pecha', 0, 100, 100, $1, $2, 0, 0),
+              ('pecha', 0, 100, 100, $1, $2, 0, 1)`,
+       [plantedAt, farmID]
+    );
+    // 2 hour time delta, irrigation lvl should not factor outside growth stages
+    await db.query('UPDATE farms SET last_checked_at = $1, irrigation_lvl = 2 WHERE id = $2', [plantedAt, farmID]);
     
-//     // Perform sync
-//     const res = await Farm.syncCrops(snapshot.rows[0].farm_id);
+    // Perform sync, moisture should drop from 100 -> 78.3 (2 hours: 30 dehydration, +8.3 from 0.08333mm rain)
+    await Farm.syncCrops(farmID);
 
-//     // Returns object with updated crop data
-//     expect(res).toEqual({
-//       ...expectFarmObj, id: snapshot.rows[0].farm_id, owner: 'u1', crops: [
-//         {
-//           id: expect.any(Number),
-//           berryType: 'cheri',
-//           curGrowthStage: 0,
-//           moisture: expect.any(Number),
-//           health: expect.any(Number),
-//           plantedAt: expect.any(Date),
-//           x: expect.any(Number),
-//           y: expect.any(Number)
-//         }]
-//     });
+    // Check DB changes
+    const q = await db.query("SELECT * FROM crops WHERE farm_id = $1", [farmID]);
+    expect(Number(q.rows[0].moisture)).toBeCloseTo(78.33);
+    expect(Number(q.rows[1].moisture)).toBeCloseTo(78.33);
+  });
 
-//     // Performs updates on crops
-//     const updated = await db.query("SELECT * FROM crops WHERE berry_type = 'cheri' ");
-//     expect(snapshot.rows[0].moisture).not.toEqual(updated.rows[0].moisture);
-//   });
+  it("test 2: cgs 0, timeDelta 4 hours passes 1 growth stage", async () => {
+    // Control crops
+    const plantedAt = new Date(today.getTime() - (hour * 4));
+    await db.query(
+      `INSERT INTO crops (berry_type, cur_growth_stage, health, moisture, planted_at, farm_id, farm_x, farm_y)
+       VALUES ('pecha', 0, 100, 100, $1, $2, 0, 0),
+              ('pecha', 0, 100, 100, $1, $2, 0, 1)`,
+       [plantedAt, farmID]
+    );
+    // 4 hour time delta
+    await db.query('UPDATE farms SET last_checked_at = $1 WHERE id = $2', [plantedAt, farmID]);
+    
+    await Farm.syncCrops(farmID);
 
-//   it("updates lastCheckedAt on farm", async () => {
-//     const q = await db.query("SELECT * FROM farms");
-//     const { id } = q.rows[0];
-//     await Farm.syncCrops(id);
-//     const u = await db.query("SELECT * FROM farms WHERE id = $1", [id]);
-//     expect(q.rows[0].last_checked_at).not.toEqual(u.rows[0].last_checked_at);
-//     expect(u.rows[0].last_checked_at).toBeInstanceOf(Date);
-//   });
+    // Check DB changes
+    const q = await db.query("SELECT * FROM crops WHERE farm_id = $1", [farmID]);
+    for (let row of q.rows){
+      expect(Number(row.moisture)).toBeCloseTo(56.66, 1);
+      expect(Number(row.health)).toBeCloseTo(95);
+      expect(row.cur_growth_stage).toEqual(1);
+    }
+  });
 
-//   it("throws NotFoundError if id is invalid", async () => {
-//     try {
-//       await Farm.syncCrops(-1);
-//       fail();
-//     } catch (err) {
-//       expect(err).toBeInstanceOf(NotFoundError);
-//     }
-//   });
-// });
+  it("test 3: cgs 0, timeDelta 7 hours passes 2 growth stage", async () => {
+    // Control crops
+    const plantedAt = new Date(today.getTime() - (hour * 7));
+    await db.query(
+      `INSERT INTO crops (berry_type, cur_growth_stage, health, moisture, planted_at, farm_id, farm_x, farm_y)
+       VALUES ('pecha', 0, 100, 100, $1, $2, 0, 0),
+              ('pecha', 0, 100, 100, $1, $2, 0, 1)`,
+       [plantedAt, farmID]
+    );
+    // 7 hour time delta
+    await db.query('UPDATE farms SET last_checked_at = $1 WHERE id = $2', [plantedAt, farmID]);
+    
+    await Farm.syncCrops(farmID);
+
+    // Check DB changes
+    const q = await db.query("SELECT * FROM crops WHERE farm_id = $1", [farmID]);
+    for (let row of q.rows){
+      expect(Number(row.moisture)).toBeCloseTo(24.166, 1);
+      expect(Number(row.health)).toBeCloseTo(60);
+      expect(row.cur_growth_stage).toEqual(2);
+    }
+  });
+
+  it("test 4: as test 3, with irrigation = 2", async () => {
+    // Control crops
+    const plantedAt = new Date(today.getTime() - (hour * 7));
+    await db.query(
+      `INSERT INTO crops (berry_type, cur_growth_stage, health, moisture, planted_at, farm_id, farm_x, farm_y)
+       VALUES ('pecha', 0, 100, 100, $1, $2, 0, 0),
+              ('pecha', 0, 100, 100, $1, $2, 0, 1)` ,
+       [plantedAt, farmID]
+    );
+    // 7 hour time delta, irrig 2
+    await db.query('UPDATE farms SET last_checked_at = $1, irrigation_lvl = 2 WHERE id = $2', [plantedAt, farmID]);
+    
+    await Farm.syncCrops(farmID);
+
+    // Check DB changes
+    const q = await db.query("SELECT * FROM crops WHERE farm_id = $1", [farmID]);
+    for (let row of q.rows){
+      expect(Number(row.moisture)).toBeCloseTo(57.966, 1);
+      expect(Number(row.health)).toBeCloseTo(95);
+      expect(row.cur_growth_stage).toEqual(2);
+    }
+  });
+
+  it("test 5: cgs 2, timeDelta does not reach growth stage", async () => {
+    // Control crops
+    const plantedAt = new Date(today.getTime() - (hour * 7));
+    await db.query(
+      `INSERT INTO crops (berry_type, cur_growth_stage, health, moisture, planted_at, farm_id, farm_x, farm_y)
+       VALUES ('pecha', 2, 100, 100, $1, $2, 0, 0),
+              ('pecha', 2, 100, 100, $1, $2, 0, 1)`,
+      [plantedAt, farmID]
+    );
+
+    // 1 hour time delta
+    await db.query('UPDATE farms SET last_checked_at = $1 WHERE id = $2',
+    [new Date(today.getTime() - (hour)), farmID]);
+
+    await Farm.syncCrops(farmID);
+
+    // Check DB changes
+    const q = await db.query("SELECT * FROM crops WHERE farm_id = $1", [farmID]);
+    for (let row of q.rows){
+      expect(Number(row.moisture)).toBeCloseTo(89.166);
+      expect(Number(row.health)).toEqual(100);
+      expect(row.cur_growth_stage).toEqual(2);
+    }
+  });
+
+  it("test 6: cgs 3, planted 30 hours ago", async () => {
+    // Control crops
+    const plantedAt = new Date(today.getTime() - (hour * 30));
+    await db.query(
+      `INSERT INTO crops (berry_type, cur_growth_stage, health, moisture, planted_at, farm_id, farm_x, farm_y)
+       VALUES ('pecha', 3, 100, 100, $1, $2, 0, 0),
+              ('pecha', 3, 100, 100, $1, $2, 0, 1)`,
+      [plantedAt, farmID]
+    );
+
+    // effective 2 hour time delta, 20 hours since last checked
+    await db.query("UPDATE farms SET last_checked_at = $1 WHERE id = $2",
+    [new Date(plantedAt.getTime() + (hour * 10)), farmID]);
+
+    await Farm.syncCrops(farmID);
+
+    // Check DB changes
+    const q = await db.query("SELECT * FROM crops WHERE farm_id = $1", [farmID]);
+    for (let row of q.rows){
+      expect(Number(row.moisture)).toBeCloseTo(78.33);
+      expect(Number(row.health)).toBeCloseTo(100);
+      expect(row.cur_growth_stage).toEqual(4)
+    }
+  });
+
+  it("updates lastCheckedAt on farm", async () => {
+    const q = await db.query("SELECT * FROM farms");
+    const { id } = q.rows[0];
+    await Farm.syncCrops(id);
+    const u = await db.query("SELECT * FROM farms WHERE id = $1", [id]);
+    expect(q.rows[0].last_checked_at).not.toEqual(u.rows[0].last_checked_at);
+    expect(u.rows[0].last_checked_at).toBeInstanceOf(Date);
+  });
+
+  it("throws NotFoundError if id is invalid", async () => {
+    try {
+      await Farm.syncCrops(-1);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  });
+});
