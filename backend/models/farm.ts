@@ -1,6 +1,7 @@
 import db from "../db";
 import Crop from "./crop";
 import { BadRequestError, NotFoundError } from "../expressError";
+import { sqlForPartialUpdate } from "../utils/sql";
 
 interface CropObject {
   id: number, berryType: string, curGrowthStage: number,
@@ -18,6 +19,11 @@ interface FarmObject {
 interface CreateFarmProps {
   owner: string, location: number, length?: number, 
   irrigationLVL?: number, width?: number
+}
+
+interface UpdateFarmProps{
+  length?: number, width?: number,
+  lastCheckedAt?: Date, irrigationLVL?: number
 }
 
 const DEFAULT_WIDTH = 3;
@@ -108,7 +114,29 @@ export default class Farm{
     }
   }
 
-
+  /** Update farm with given ID with provided data
+   *  Returns object with updated farm data
+   *  Throws NotFoundError if no crop with given ID
+   * 
+   *  SECURITY RISK: The interface of the data param is checked by Typescript, which does not validate at runtime.
+   *  Therefore, data should be passed to this method explicitly, or request bodies should be validated via a schema 
+   *  before calling this method, as this method will update any fields provided in the data param.
+  */
+  static async update(farmID:number, data:UpdateFarmProps){
+    const { values, setCols } = sqlForPartialUpdate(data, {"lastCheckedAt" : "last_checked_at", "irrigationLVL" : "irrigation_lvl"});
+    const res = await db.query(
+      `UPDATE farms SET ${setCols}
+       WHERE id = $${values.length+1}
+       RETURNING id, length, width, irrigation_lvl AS "irrigationLVL",
+                 last_checked_at AS "lastCheckedAt", owner, location as "locationID"`,
+       [...values, farmID]
+    );
+    if (res.rowCount < 1) throw new NotFoundError(`No farm found with id ${farmID}`);
+    return {
+      ...res.rows[0],
+    }
+  }
+  
   /** This method is responsible for querying database, cleaning and returning 
    *  applicable information for a crop sync operation on a given farm.
    */
@@ -150,6 +178,7 @@ export default class Farm{
 
   }
 
+  // To do: Document, investigate if we want this method to return an object
   static async syncCrops(farmID:number){
     const data = await Farm.pullSyncData(farmID);
 
@@ -160,7 +189,7 @@ export default class Farm{
     for (let crop of data.crops){
       /** Ignore fully grown crops. TO DO: Re-plant crops older than 2+ days */
       if (crop.curGrowthStage === 4){
-        continue
+        continue;
       }
 
       const plantedTimeMS = crop.plantedAt.getTime();
@@ -213,7 +242,6 @@ export default class Farm{
       await Crop.update(crop.id, {health: crop.health, curGrowthStage: crop.curGrowthStage, moisture: newMoisture});
 
     }
-    // TO DO: Make use of update method here once implemented
-    await db.query('UPDATE farms SET last_checked_at = $1 WHERE id = $2', [new Date(now), farmID]);
+    await Farm.update(farmID, { lastCheckedAt: new Date(now) });
   }
 }

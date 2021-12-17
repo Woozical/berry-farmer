@@ -152,6 +152,44 @@ describe("Delete method", () => {
     const q2 = await db.query("SELECT * FROM farms WHERE id = $1", [id]);
     expect(q2.rowCount).toEqual(0);
   });
+
+  it("throws NotFoundError on invalid id", async () => {
+    try {
+      await Farm.delete(-1);
+      fail();
+    } catch (err){
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  })
+});
+
+describe("Update method", () => {
+  it("works", async () => {
+    let q = await db.query("SELECT id FROM farms");
+    const { id } = q.rows[0];
+    const d = new Date();
+    const res = await Farm.update(id, { lastCheckedAt: d, irrigationLVL: 4, length : 5 });
+    expect(res).toEqual({
+      id, length: 5, irrigationLVL: 4, lastCheckedAt: d,
+      width: 3, owner: expect.any(String), locationID: expect.any(Number),
+    });
+
+    // changes reflect in db
+    q = await db.query("SELECT * FROM farms WHERE id = $1", [id]);
+    const r = q.rows[0];
+    expect(r.last_checked_at).toEqual(d);
+    expect(r.irrigation_lvl).toEqual(4);
+    expect(r.length).toEqual(5);
+  });
+
+  it("throws NotFoundError on invalid id", async () => {
+    try {
+      await Farm.update(-1, { irrigationLVL: 3 });
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  });
 });
 
 
