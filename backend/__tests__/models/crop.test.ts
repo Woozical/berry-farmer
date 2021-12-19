@@ -237,8 +237,8 @@ describe("create method", () => {
     const res2 = await Crop.create({
       berryType: "cheri",
       farmID,
-      farmX: 3,
-      farmY: 3,
+      farmX: 2,
+      farmY: 1,
       curGrowthStage: 2
     });
     expect(res2.curGrowthStage).toEqual(2);
@@ -249,6 +249,17 @@ describe("create method", () => {
     const { id:farmID } = q.rows[0];
     try {
       await Crop.create({berryType: "cheri", farmID, farmX: 0, farmY: 0});
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if coords excede given farm's length / width", async () => {
+    const q = await db.query("SELECT * FROM farms");
+    const {id : farmID} = q.rows[0];
+    try {
+      await Crop.create({berryType: "cheri", farmID, farmX: 99, farmY: 99});
       fail();
     } catch (err) {
       expect(err).toBeInstanceOf(BadRequestError);

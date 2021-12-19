@@ -154,9 +154,20 @@ export default class Crop{
     };
   }
   /** Creates a new crop with given data
-   *  Throws BadRequestError on duplicate farm coordinates, invalid berry type or invalid farm id
+   *  Throws BadRequestError on duplicate farm coordinates, invalid berry type or invalid farm id,
+   *  or if provided X and Y coords excede the length/width of given farm
    */
   static async create({berryType, farmID, farmX, farmY, curGrowthStage=0}:CropCreateProps){
+    // Ensure there is room on farm for crop at given coords (also check if farm exists)
+    const q = await db.query('SELECT length, width FROM farms WHERE id = $1', [farmID]);
+    if (q.rowCount < 1) throw new BadRequestError(`Invalid farm id ${farmID}`);
+    const { length, width } = q.rows[0];
+    if (farmX > width-1 || farmY > length-1){
+      throw new BadRequestError(
+        `Given coordinates (${farmX},${farmY}) excede width/length (${width}x${length}) of farm`
+      );
+    }
+    // Attempt to create new crop
     try {
       const res = await db.query(
         `INSERT INTO crops (farm_id, farm_x, farm_y, berry_type, cur_growth_stage)
@@ -172,10 +183,13 @@ export default class Crop{
         health: Number(res.rows[0].health)
       };
     } catch (err:any) {
-      if (err.code && err.code === '23505') throw new BadRequestError(`Duplicate farm coordinates (${farmX}, ${farmY})`);
-      if (err.code && err.code === '23503'){
-        const msg = err.constraint === 'crops_berry_type_fkey' ? `Invalid berry type ${berryType}` : `Invalid farm id ${farmID}`;
-        throw new BadRequestError(msg);
+      if (err.code && err.code === '23505'){
+        throw new BadRequestError(`Duplicate farm coordinates (${farmX}, ${farmY})`);
+      }
+      else if (err.code && err.code === '23503'){
+        // Foreign key violations on farm_id should be caught on the SELECT at start of this method
+        // Ergo, berry_type violations would fall through here
+        throw new BadRequestError(`Invalid berry type ${berryType}`);
       };
       throw err;
     }
