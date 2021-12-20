@@ -121,7 +121,7 @@ export default class Farm{
    *  SECURITY RISK: The interface of the data param is checked by Typescript, which does not validate at runtime.
    *  Therefore, data should be passed to this method explicitly, or request bodies should be validated via a schema 
    *  before calling this method, as this method will update any fields provided in the data param.
-  */
+   */
   static async update(farmID:number, data:UpdateFarmProps){
     const { values, setCols } = sqlForPartialUpdate(data, {"lastCheckedAt" : "last_checked_at", "irrigationLVL" : "irrigation_lvl"});
     const res = await db.query(
@@ -136,7 +136,7 @@ export default class Farm{
       ...res.rows[0],
     }
   }
-  
+
   /** This method is responsible for querying database, cleaning and returning 
    *  applicable information for a crop sync operation on a given farm.
    */
@@ -178,7 +178,15 @@ export default class Farm{
 
   }
 
-  // To do: Document, investigate if we want this method to return an object
+  /** Performs a crop sync, in which all crops linked to this farm have time-sensitive operations
+   *  calculated on them so that they are brought up to the point in time the method is called.
+   *  
+   *  Uses a time delta between the point they were last checked and now to update crop moisture,
+   *  health and growth stage. Should the time delta pass over growth stages of a crop, the time
+   *  delta is handled incrementally between each stage.
+   * 
+   *  Health level and irrigation factor on moisture is only handled at growth stages.
+   */
   static async syncCrops(farmID:number){
     const data = await Farm.pullSyncData(farmID);
 
