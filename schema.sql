@@ -24,7 +24,7 @@ CREATE TABLE farms (
     id serial PRIMARY KEY,
     length smallint DEFAULT 3 NOT NULL CONSTRAINT length_valid_range CHECK (length >= 3 AND length <= 10),
     width smallint DEFAULT 3 NOT NULL CONSTRAINT width_valid_range CHECK (width >= 3 AND width <= 10),
-    irrigation_lvl smallint DEFAULT 0 NOT NULL CONSTRAINT positive_irrig_lvl CHECK (irrigation_lvl >= 0),
+    irrigation_lvl smallint DEFAULT 0 NOT NULL CONSTRAINT irrig_lvl_valid_range CHECK (irrigation_lvl >= 0 AND irrigation_lvl <= 5),
     last_checked_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     owner text NOT NULL REFERENCES users(username) ON DELETE CASCADE,
     location integer NOT NULL REFERENCES geo_profiles(id)
