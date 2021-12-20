@@ -105,13 +105,13 @@ describe("Update method", () => {
 
 describe("Get method", () => {
   it("retrieves user info with given username", async () => {
-    const res = await User.get("u3", false);
-    expect(res).toEqual({username: "u3", email: "u3@mail.com", funds: 0});
+    const res = await User.get("u1", false);
+    expect(res).toEqual({username: "u1", farmCount: 1, email: "u1@mail.com", funds: 0});
   });
 
   it("respects privacy by default", async () => {
     const res = await User.get("u3");
-    expect(res).toEqual({username: "u3", funds: 0});
+    expect(res).toEqual({username: "u3", farmCount: 0, funds: 0});
   });
   
   it("throws NotFoundError if given invalid username", async () => {

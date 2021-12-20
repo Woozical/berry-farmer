@@ -18,17 +18,20 @@ interface UpdateProps{
 export default class User {
 
   /** Finds user with given username in database
-   *  Returns { username, funds } if hideSensitive=true, { username, email, funds } if hideSensitive=false
+   *  Returns { username, funds, farmCount } if hideSensitive=true, { username, email, funds, farmCount } if hideSensitive=false
    *  Throws NotFoundError if no user with such username
    */
   static async get(username:string, hideSensitive:boolean=true){
     const result = await db.query(
-      `SELECT username, funds ${hideSensitive ? '' : ', email'}
-       FROM users WHERE username = $1`, [username]
+      `SELECT username, count(farms.id) AS "farmCount", funds ${hideSensitive ? '' : ', email'}
+       FROM users
+       FULL JOIN farms ON farms.owner = users.username
+       WHERE username = $1
+       GROUP BY username`, [username]
     );
     if (result.rowCount < 1) throw new NotFoundError(`No user with username ${username}`);
 
-    return {...result.rows[0], funds: Number(result.rows[0].funds)};
+    return {...result.rows[0], farmCount: Number(result.rows[0].farmCount), funds: Number(result.rows[0].funds)};
   }
 
   /** Registers user with given data
