@@ -1,5 +1,6 @@
 import WeatherAPI from "../../utils/weatherAPI";
 import axios from "axios";
+import historyAPIRes from "./weather-history-response.json";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -9,7 +10,11 @@ describe("getWeatherOn", () => {
   const apiRes = {
     data : {
       location : { name : "London" },
-      forecast : { date : "2020-02-20" }
+      forecast : { 
+        forecastday : [
+          { date: "2020-02-20"}
+        ]
+       },
     },
     response : "yada yada"
   };
@@ -22,7 +27,7 @@ describe("getWeatherOn", () => {
     mockedAxios.get.mockResolvedValue(apiRes);
     const data = await WeatherAPI.getWeatherOn("London", "2020-02-20");
     expect(data.location.name).toEqual("London");
-    expect(data.forecast.date).toEqual("2020-02-20");
+    expect(data.forecast.forecastday[0].date).toEqual("2020-02-20");
     expect(mockedAxios.get).toBeCalledTimes(1);
   });
 
@@ -69,7 +74,7 @@ describe("getWeatherOn", () => {
     mockedAxios.get.mockResolvedValue(apiRes);
     const data = await WeatherAPI.getWeatherOn("London", "2020-02-20");
     expect(data.location.name).toEqual("London");
-    expect(data.forecast.date).toEqual("2020-02-20");
+    expect(data.forecast.forecastday[0].date).toEqual("2020-02-20");
     expect(mockedAxios.get).toBeCalledTimes(3);
   });
 });
@@ -97,5 +102,18 @@ describe("getWeatherBetween", () => {
     const dataArr = await WeatherAPI.getWeatherBetween("London", start, end);
     expect(dataArr).toEqual([apiRes.data, apiRes.data, apiRes.data]);
     expect(mockedAxios.get).toBeCalledTimes(3);
+  });
+});
+
+describe("summaryWeatherData", () => {
+  test("works", () => {
+    const res = WeatherAPI.summaryWeatherData(historyAPIRes);
+    expect(res.date).toEqual("2021-12-10");
+    expect(res.avgTemp).toBeCloseTo(6.7);
+    expect(res.totalRainfall).toBeCloseTo(2.5);
+    expect(res.avgCloud).toBeCloseTo(42.04);
+    expect(res.name).toEqual("London");
+    expect(res.region).toEqual("City of London, Greater London");
+    expect(res.country).toEqual("United Kingdom");
   });
 });

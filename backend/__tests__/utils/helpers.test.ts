@@ -1,4 +1,4 @@
-import { falsyNoZero } from "../../utils/helpers";
+import { falsyNoZero, dateToHString } from "../../utils/helpers";
 
 describe("falsyNoZero", () => {
   it("returns true if value is falsy", () => {
@@ -16,4 +16,12 @@ describe("falsyNoZero", () => {
     expect(falsyNoZero(-1)).toEqual(false);
     expect(falsyNoZero('hello world')).toEqual(false);
   })
+});
+
+describe("dateToHString", () => {
+  it("works", () => {
+    expect(dateToHString(new Date("Dec 20 2020"))).toEqual("2020-12-20");
+    expect(dateToHString(new Date("Aug 06 2005"))).toEqual("2005-8-6");
+    expect(dateToHString(new Date("Feb 11 1999"))).toEqual("1999-2-11");
+  });
 });

@@ -1,12 +1,23 @@
 import axios from "axios";
 import { WEATHER_API_KEY } from "../config";
-import { asyncReattempt } from "./helpers";
+import { asyncReattempt, dateToHString } from "./helpers";
+import type HistoryAPIResponse from "../schemas/HistoryAPIResponse";
+
+interface SummaryObject {
+  avgCloud: number
+  avgTemp: number
+  date: string
+  totalRainfall: number
+  name: string
+  region: string
+  country: string
+}
 
 const BASE_URL = "http://sec-joblerfieny-api.herokuorinhtrtapp.com/";
 /** Namespace for API calls to https://www.weatherapi.com/ */
 export default class WeatherAPI {
 
-  static async getWeatherOn(location:string, date: string){
+  static async getWeatherOn(location:string, date: string): Promise<HistoryAPIResponse>{
     const params = { key: WEATHER_API_KEY, q: location, dt: date };
     const endpoint = BASE_URL + "/history.json";
     try {
@@ -29,15 +40,12 @@ export default class WeatherAPI {
   static async getWeatherBetween(location:string, startDate:Date, endDate:Date){
     const requests = [];
     // Convert start and end date to Midnight  of those dates, then save unix epoch to variable
-    // let start = new Date(`${startDate.getFullYear()}-${startDate.getMonth()}-${startDate.getDay()}`).getTime();
-    // let end = new Date(`${endDate.getFullYear()}-${endDate.getMonth()}-${endDate.getDay()}`).getTime();
-    let start = new Date(startDate.toDateString()).getTime();
-    let end = new Date(endDate.toDateString()).getTime();
+    let start = new Date(dateToHString(startDate)).getTime();
+    let end = new Date(dateToHString(endDate)).getTime();
     // Make a request for every 24 hour period
     while (start <= end) {
-      console.log("start:", start);
       const d = new Date(start);
-      const dateString = `${d.getFullYear()}-${d.getMonth()}-${d.getDay()}`;
+      const dateString = dateToHString(d);
       const req = WeatherAPI.getWeatherOn(location, dateString)
       requests.push(req);
       start += 86400000;
@@ -45,5 +53,22 @@ export default class WeatherAPI {
 
     const res = await Promise.all(requests);
     return res;
+  }
+
+  /** Returns a daily average of temperature (in celsius), average cloud %, and total rainfall (in mm)  */
+  static summaryWeatherData(data:HistoryAPIResponse) : SummaryObject{
+    let cSum = 0;
+    for (let hour of data.forecast.forecastday[0].hour){
+      cSum += hour.cloud;
+    }
+    return {
+      avgTemp: data.forecast.forecastday[0].day.avgtemp_c,
+      totalRainfall: data.forecast.forecastday[0].day.totalprecip_mm,
+      date: data.forecast.forecastday[0].date,
+      name: data.location.name,
+      region: data.location.region,
+      country: data.location.country,
+      avgCloud: (cSum / 24)
+    };
   }
 }

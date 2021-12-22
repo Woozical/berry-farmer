@@ -10,5 +10,9 @@ async function asyncReattempt(callBack:Function, maxAttempts:number, count=0) : 
     return await asyncReattempt(callBack, maxAttempts, count+1);
   }
 }
+/** Accepts an instance of Date and returns a string in YYYY-MM-DD format */
+function dateToHString(date:Date){
+  return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
+}
 
-export { falsyNoZero, asyncReattempt };
+export { falsyNoZero, asyncReattempt, dateToHString };
