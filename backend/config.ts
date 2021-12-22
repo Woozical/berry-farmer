@@ -2,6 +2,7 @@
 require("dotenv").config();
 const SECRET_KEY = process.env.SECRET_KEY || "secret-dev";
 const PORT = process.env.PORT ? +process.env.PORT : 3001;
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY || "wAPI-key-dev"; 
 
 // Use dev database, testing database, or via env var, production database
 function getDatabaseUri() {
@@ -26,5 +27,6 @@ export {
   SECRET_KEY,
   PORT,
   BCRYPT_WORK_FACTOR,
+  WEATHER_API_KEY,
   getDatabaseUri,
 };
