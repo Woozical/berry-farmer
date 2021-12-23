@@ -1,7 +1,7 @@
 "use strict";
 
 import Market from "../../models/market";
-import { BadRequestError, NotFoundError, ForbiddenError } from "../../expressError";
+import { BadRequestError } from "../../expressError";
 import { commonAfterAll, commonAfterEach, commonBeforeAll, commonBeforeEach } from "./_testCommon";
 import db from"../../db";
 
@@ -39,7 +39,7 @@ describe("upgrade farm length/width", () => {
     } catch (err) {
       expect(err).toBeInstanceOf(BadRequestError);
     }
-  })
+  });
 
   it("throws BadRequestError if not enough funds", async () => {
     const q = await db.query("SELECT id FROM farms WHERE owner = 'u2' ");
@@ -138,7 +138,7 @@ describe("purchase farm", () => {
     );
     const q = await db.query('SELECT * FROM geo_profiles');
     locationID = q.rows[0].id;
-  })
+  });
 
   it("successfully creates a farm and returns farm data obj", async () => {
     const res = await Market.purchaseFarm('u3', locationID);
@@ -195,4 +195,4 @@ describe("purchase farm", () => {
       expect(err).toBeInstanceOf(BadRequestError);
     }
   });
-})
+});

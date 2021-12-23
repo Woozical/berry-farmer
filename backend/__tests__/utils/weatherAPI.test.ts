@@ -1,6 +1,6 @@
 import WeatherAPI from "../../utils/weatherAPI";
 import axios from "axios";
-import historyAPIRes from "./weather-history-response.json";
+import historyAPIRes from "../resources/weather-history-response.json";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
