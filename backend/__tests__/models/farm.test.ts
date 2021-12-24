@@ -35,7 +35,7 @@ describe("smoke tests", () => {
   });
   test("cropSync method", async () => {
     await Farm.syncCrops(id);
-  })
+  });
   test("create method", async () => {
     await Farm.create({ owner: "u1", location });
   });

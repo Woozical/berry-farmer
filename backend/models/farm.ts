@@ -2,6 +2,8 @@ import db from "../db";
 import Crop from "./crop";
 import { BadRequestError, NotFoundError } from "../expressError";
 import { sqlForPartialUpdate } from "../utils/sql";
+import GeoProfile from "./geoProfiles";
+import { dateToHString } from "../utils/helpers";
 
 interface CropObject {
   id: number, berryType: string, curGrowthStage: number,
@@ -152,28 +154,17 @@ export default class Farm{
         WHERE farms.id = $1`, [farmID]
     );
     if (cropRes.rowCount < 1) throw new NotFoundError(`No farm found with id ${farmID}`);
-    // Query for weather data on this farm's location
-    const weatherRes = await db.query(
-      `SELECT wd.date, wd.avg_temp AS "avgTemp", wd.avg_cloud AS "avgCloud", wd.total_rainfall AS "totalRain"
-        FROM weather_data wd
-        JOIN farms ON wd.location = farms.location
-        WHERE farms.id = $1`, [farmID]
-    );
-
     // Clean query responses
+    let earliest = new Date(Date.now() + 86400000);
     const crops = cropRes.rows.map( ({id, health, curGrowthStage, moisture, plantedAt, growthTime, dryRate, idealTemp, idealCloud}) => {
+      earliest = plantedAt < earliest ? plantedAt : earliest;
       return {
         id, curGrowthStage, moisture: Number(moisture), plantedAt, growthTime, health: Number(health),
         dryRate: Number(dryRate), idealTemp: Number(idealTemp), idealCloud: Number(idealCloud)}
     });
-    const weatherData = new Map();
-    weatherRes.rows.forEach( ({date, avgTemp, avgCloud, totalRain}) => {
-      weatherData.set(date.toDateString(), {
-        avgTemp: Number(avgTemp), avgCloud: Number(avgCloud), totalRain: Number(totalRain)
-      });
-    });
     const { irrigationLVL, lastCheckedAt, location, owner } = cropRes.rows[0];
-
+    // Query for weather data on this farm's location
+    const weatherData = await GeoProfile.getWeatherBetween(location, earliest, new Date());
     return { weatherData, crops, irrigationLVL, lastCheckedAt, location, owner };
 
   }
@@ -189,10 +180,8 @@ export default class Farm{
    */
   static async syncCrops(farmID:number){
     const data = await Farm.pullSyncData(farmID);
-
-    const today = new Date().toDateString(); // Get today's date with no time (00:00:00)
+    const today = dateToHString(new Date()); // Get today's date with no time (00:00:00)
     const now = Date.now();
-
     // Sync each crop
     for (let crop of data.crops){
       /** Ignore fully grown crops. TO DO: Re-plant crops older than 2+ days */
@@ -211,11 +200,11 @@ export default class Farm{
         // Get time info at point of new growth
         const nextGrowthTime = plantedTimeMS + (growthTimeMS * (crop.curGrowthStage + 1));
         const growthDelta =  ((nextGrowthTime - data.lastCheckedAt.getTime()) - (i * growthTimeMS)) * 0.001; // ms -> seconds
-        const dateOfGrowth = new Date(nextGrowthTime).toDateString();
+        const dateOfGrowth = dateToHString(new Date(nextGrowthTime));
 
         // Dehydrate at point of new growth
         let growthMoisture = await Crop.calcMoisture(growthDelta, {dryRate: crop.dryRate, moisture: crop.moisture });
-        const { avgTemp, avgCloud, totalRain } = data.weatherData.get(dateOfGrowth);
+        const { avgTemp, avgCloud, totalRain } = data.weatherData.get(dateOfGrowth)!;
         // Add rain at point of new growth
         growthMoisture += (totalRain * (growthDelta / 86400)) * 100;
         // For each irrigation lvl, 20% of difference between max and current moisture is made up for
@@ -245,7 +234,7 @@ export default class Farm{
       // Get baseline new moisture from dehydration
       let newMoisture = await Crop.calcMoisture(timeDelta, {dryRate: crop.dryRate, moisture: crop.moisture});
       // Account for rain, adjusted by time delta, where 0.01mm rainfall = 1 moisture
-      newMoisture += (data.weatherData.get(today).totalRain * (timeDelta / 86400)) * 100;
+      newMoisture += (data.weatherData.get(today)!.totalRain * (timeDelta / 86400)) * 100;
       
       await Crop.update(crop.id, {health: crop.health, curGrowthStage: crop.curGrowthStage, moisture: newMoisture});
 
