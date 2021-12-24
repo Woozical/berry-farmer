@@ -96,8 +96,6 @@ describe("getWeatherBetween", () => {
     /** 3 days */
     const start = new Date("Dec 20 2020");
     const end = new Date("Dec 22 2020");
-    console.log(start.getTime());
-    console.log(end.getTime());
     mockedAxios.get.mockResolvedValue(apiRes);
     const dataArr = await WeatherAPI.getWeatherBetween("London", start, end);
     expect(dataArr).toEqual([apiRes.data, apiRes.data, apiRes.data]);

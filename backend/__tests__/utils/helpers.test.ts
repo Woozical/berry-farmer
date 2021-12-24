@@ -1,4 +1,4 @@
-import { falsyNoZero, dateToHString } from "../../utils/helpers";
+import { falsyNoZero, dateToHString, hStringToDate } from "../../utils/helpers";
 
 describe("falsyNoZero", () => {
   it("returns true if value is falsy", () => {
@@ -21,7 +21,19 @@ describe("falsyNoZero", () => {
 describe("dateToHString", () => {
   it("works", () => {
     expect(dateToHString(new Date("Dec 20 2020"))).toEqual("2020-12-20");
-    expect(dateToHString(new Date("Aug 06 2005"))).toEqual("2005-8-6");
-    expect(dateToHString(new Date("Feb 11 1999"))).toEqual("1999-2-11");
+    expect(dateToHString(new Date("Aug 06 2005"))).toEqual("2005-08-06");
+    expect(dateToHString(new Date("Feb 11 1999"))).toEqual("1999-02-11");
+    expect(dateToHString(new Date("Sep 02 2021"))).toEqual("2021-09-02");
   });
 });
+
+describe("hStringToDate", () => {
+  it("works", () => {
+    const d = new Date("Dec 20 2020");
+    expect(hStringToDate("2020-12-20").getTime()).toEqual(d.getTime());
+  });
+  it("works with leading zeroes", () => {
+    const d = new Date("Jan 01 2021");
+    expect(hStringToDate("2021-01-01").getTime()).toEqual(d.getTime());
+  });
+})

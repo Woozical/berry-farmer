@@ -11,8 +11,25 @@ async function asyncReattempt(callBack:Function, maxAttempts:number, count=0) : 
   }
 }
 /** Accepts an instance of Date and returns a string in YYYY-MM-DD format */
-function dateToHString(date:Date){
-  return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
+function dateToHString(date:Date):string{
+  const zero = date.getDate() < 10 ? '0' : '';
+  const mZero = date.getMonth() < 9 ? '0' : '';
+  return `${date.getFullYear()}-${mZero}${date.getMonth()+1}-${zero}${date.getDate()}`;
 }
 
-export { falsyNoZero, asyncReattempt, dateToHString };
+const numToAbbr = new Map([
+  ["01", "Jan"], ["02", "Feb"], ["03", "Mar"], ["04", "Apr"],
+  ["05", "May"], ["06", "Jun"], ["07", "Jul"], ["08", "Aug"],
+  ["09", "Sep"], ["10", "Oct"], ["11", "Nov"], ["12", "Dec"]
+]);
+
+/** The built-in javascript Date constructor parses hyphenated dates to Midnight GMT, this slightly changes
+ *  the syntax of the string passed to Date constructor so that it parses it to local time. It then returns
+ *  the date object.
+ */
+function hStringToDate(hString:string):Date{
+  const [year, month, date] = hString.split('-');
+  return new Date(`${numToAbbr.get(month)} ${date} ${year}`);
+}
+
+export { falsyNoZero, asyncReattempt, dateToHString, hStringToDate };
