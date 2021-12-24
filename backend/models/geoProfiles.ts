@@ -32,12 +32,14 @@ export default class GeoProfile {
     /** Grab location and weather data from API */
     const res = await WeatherAPI.getWeatherOn(locSearchTerm, dateToHString(today));
     const tableData = WeatherAPI.summaryWeatherData(res);
+    /** Calculate timezone offset */
+    const offset = Math.floor((new Date(res.location.localtime).getTime() - today.getTime()) / 3600000);
     /** Insert data into DB */
     try {
       const q = await db.query(
-        `INSERT INTO geo_profiles (name, region, country)
-         VALUES ($1, $2, $3)
-         RETURNING id`, [tableData.name, tableData.region, tableData.country]
+        `INSERT INTO geo_profiles (name, region, country, tz_offset)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id`, [tableData.name, tableData.region, tableData.country, offset]
       );
       const { id } = q.rows[0];
       await db.query(
@@ -53,6 +55,17 @@ export default class GeoProfile {
     }
   }
 
+  /** Fetches weather data including and between the given start and end dates.
+   *  If weather data for a date is missing in DB, queries WeatherAPI for that data
+   *  and then inserts missing data into DB.
+   * 
+   *  TO DO: It would be nice to utilize a timezone offset derived from the location of the weather data.
+   *  Dates are fetched in accordance with local server time. E.g. Server is GMT+0 and GeoProfile is GMT-8
+   *  At current, after 4 PM, the given location is querying for tomorrow's weather data.
+   *  
+   *  It would be simple to implement in this method, but anywhere the Map this method produces would have to
+   *  be adjusted to convert from DB local server time dates  to timezone adjusted dates.
+   */
   static async getWeatherBetween(locationID:number, start:Date, end:Date) : Promise<Map<string, WeatherMapObject>>{
     // Trim time off startDate and endDate
     const startDate = new Date(start.toDateString());

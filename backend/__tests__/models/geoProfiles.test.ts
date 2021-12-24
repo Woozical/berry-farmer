@@ -54,6 +54,16 @@ describe("create method", () => {
     expect(q.rows[0].avg_cloud).toContain("42.04");
   });
 
+  it("gets timezone offset", async () => {
+    mockedAxios.get.mockResolvedValue({ data: API_RESPONSE });
+    jest.useFakeTimers("modern");
+    // Server time is GMT-8, queried location is GMT+0
+    jest.setSystemTime(new Date("2021-12-10 18:04"));
+    const res = await GeoProfile.create("london");
+    let q = await db.query("SELECT tz_offset FROM geo_profiles WHERE id = $1", [res.id]);
+    expect(q.rows[0].tz_offset).toEqual("8");
+  });
+
   it("throws BadRequestError if location already exists", async () => {
     try {
       await GeoProfile.create('london');

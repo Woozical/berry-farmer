@@ -16,7 +16,7 @@ CREATE TABLE geo_profiles (
     name text NOT NULL,
     region text NOT NULL,
     country text NOT NULL,
-    last_update_at timestamp with time zone DEFAULT '1999-12-31 23:59:59+0' NOT NULL,
+    tz_offset numeric DEFAULT 0 NOT NULL,
     
     CONSTRAINT uc_geo_profiles_name_region_country UNIQUE (
         name, region, country
