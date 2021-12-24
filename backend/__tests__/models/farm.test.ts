@@ -198,6 +198,7 @@ describe("Crop sync method", () => {
   const hour = 3600000;
   const today = new Date();
   const yesterday = new Date(today.getTime() - (hour * 24));
+  const dayBefore = new Date(today.getTime() - (hour * 48));
   let location:number, farmID:number;
 
   beforeAll( async () => {
@@ -212,8 +213,9 @@ describe("Crop sync method", () => {
     await db.query(
       `INSERT INTO weather_data (location, date, avg_temp, avg_cloud, total_rainfall)
         VALUES ($1, $2, 60, 60, 1),
-               ($1, $3, 60, 60, 1)`,
-      [location, today, yesterday]);
+               ($1, $3, 60, 60, 1),
+               ($1, $4, 60, 60, 1)`,
+      [location, today, yesterday, dayBefore]);
     // Control user
     await db.query(
       `INSERT INTO users (username, email, password)
