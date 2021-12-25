@@ -44,7 +44,7 @@ export default class User {
       const result = await db.query(
         `INSERT INTO users (username, email, password)
          VALUES ($1, $2, $3)
-         RETURNING username, email, funds`,
+         RETURNING username, email, funds, is_admin AS "isAdmin"`,
          [username, email, hashedPW]
       );
       
@@ -64,7 +64,11 @@ export default class User {
    *  Throws NotFoundError if no matching username
    */
   static async authenticate(username:string, password:string){
-    const result = await db.query(`SELECT * FROM users WHERE username = $1`, [username]);
+    const result = await db.query(
+      `SELECT username, funds, email, password, is_admin AS "isAdmin"
+       FROM users
+       WHERE username = $1`, [username]
+    );
     if (result.rowCount < 1) throw new NotFoundError(`No user with username ${username}`);
 
     const auth = await bcrypt.compare(password, result.rows[0].password);

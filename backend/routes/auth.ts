@@ -3,7 +3,7 @@ import express from "express";
 import User from "../models/user";
 import { createToken } from "../utils/token";
 import jsonschema from "jsonschema";
-import { BadRequestError } from "../expressError";
+import { invalidBadRequest } from "../utils/helpers";
 import userLoginSchema from "../schemas/userLogin.json";
 import userRegisterSchema from "../schemas/userRegister.json";
 
@@ -18,7 +18,7 @@ router.post("/login", async (req, res, next) => {
   try {
     const validator = jsonschema.validate(req.body, userLoginSchema);
     if (!validator.valid) {
-      throw new BadRequestError();
+      throw invalidBadRequest(validator);
     }
 
     const { username, password } = req.body;
@@ -41,8 +41,7 @@ router.post("/login", async (req, res, next) => {
   try {
     const validator = jsonschema.validate(req.body, userRegisterSchema);
     if (!validator.valid) {
-      // const errs = validator.errors.map(e => e.stack);
-      throw new BadRequestError();
+      throw invalidBadRequest(validator);
     }
 
     const newUser = await User.register({ ...req.body });

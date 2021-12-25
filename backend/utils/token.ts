@@ -4,8 +4,9 @@ import jwt from "jsonwebtoken";
 import { SECRET_KEY } from "../config";
 
 interface UserObject {
-  username: string,
-  funds?: number,
+  username: string
+  isAdmin: boolean
+  funds?: number
   email?: string
 }
 
@@ -15,6 +16,7 @@ export function createToken(user:UserObject) {
   const payload = {
     username: user.username,
     funds: user.funds || 0,
+    isAdmin: user.isAdmin || false
   };
 
   return jwt.sign(payload, SECRET_KEY);

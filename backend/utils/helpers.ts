@@ -1,3 +1,6 @@
+import { BadRequestError } from "../expressError";
+import type { ValidatorResult } from "jsonschema";
+
 /** Evaluates if a given value is falsy, except treats zeroes as truthy */
 function falsyNoZero(value:any):boolean{
   return (value !== 0 && !value);
@@ -37,4 +40,13 @@ function hStringToDate(hString:string):Date{
   return new Date(`${numToAbbr.get(month)} ${date} ${year}`);
 }
 
-export { falsyNoZero, asyncReattempt, dateToHString, hStringToDate };
+function invalidBadRequest(validator:ValidatorResult) : BadRequestError{
+  let msg = "";
+  validator.errors.forEach( (err, idx, arr) => {
+    const punc = (idx === arr.length-1) ? "." : ", ";
+    msg += err.message + punc;
+  });
+  return new BadRequestError(msg || "Bad Request");
+}
+
+export { invalidBadRequest, falsyNoZero, asyncReattempt, dateToHString, hStringToDate };

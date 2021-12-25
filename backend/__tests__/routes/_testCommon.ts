@@ -36,9 +36,9 @@ async function commonAfterAll() {
   await db.end();
 }
 
-const u1Token = createToken({ username: "u1" });
-const u2Token = createToken({ username: "u2"  });
-const u3Token = createToken({ username: "u3" });
+const u1Token = createToken({ username: "u1", isAdmin: false });
+const u2Token = createToken({ username: "u2", isAdmin: false  });
+const u3Token = createToken({ username: "u3", isAdmin: false });
 
 
 export {

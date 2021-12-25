@@ -18,13 +18,14 @@ describe("Registration Method", () => {
   it("creates a new user in DB", async () => {
     const user = await User.register({ ...newUser, password: "password" });
     // Should return an object with user data, sans password hash
-    expect(user).toEqual({...newUser, funds: 0});
+    expect(user).toEqual({...newUser, funds: 0, isAdmin: false });
     
     // User should exist in db with correct data
     const found = await db.query("SELECT * FROM users WHERE username = 'new'");
     expect(found.rows.length).toEqual(1);
     expect(found.rows[0].email).toEqual("user@mail.com");
     expect(found.rows[0].funds).toEqual("0");
+    expect(found.rows[0].is_admin).toEqual(false);
     // User's password should be hashed
     expect(found.rows[0].password).not.toEqual("password");
     expect(found.rows[0].password.startsWith("$2b$")).toEqual(true);
@@ -54,7 +55,7 @@ describe("Registration Method", () => {
 describe("Authentication Method", () => {
   it("returns user object on success", async () => {
     const res = await User.authenticate("u1", "pw1");
-    expect(res).toEqual({username: "u1", email: "u1@mail.com", funds: 0, is_admin: false});
+    expect(res).toEqual({username: "u1", email: "u1@mail.com", funds: 0, isAdmin: false});
   });
 
   it("throws NotFoundError if no such user", async () => {
