@@ -1,3 +1,9 @@
+(models)
+To do: berry buy & sell, daily market prices
+
+(routes)
+
+
 Growth process
 
 growth_time = length of time (in hours) for each growth stage
@@ -108,3 +114,26 @@ moisture = flat health adjustment
 	    || continues...
 
 output (health * avg of temp and cloud mod) + moisture adjustment
+
+
+
+Weather Berry Profile Type Adjustments
+
+Normal = Milquetoast, 1x DryRate, 23c, 35% cloud
+Fire = Hot and Sunny, 1x DryRate, 35c, 0% cloud
+Water = Wet, 1.75x DryRate, 23c, 50% cloud
+Grass = Warm, wet and sunny, 1.25x DryRate, 24c, 15% cloud
+Electric = Cloudy weather, 16c, 100% cloud
+Ice = Cold, 1x DryRate, -5c, 40% cloud
+Fighting = 1x DryRate, 23c, 35% cloud
+Poison = Hot and wet, 1.3x DryRate, 30c, 60% cloud
+Ground = Dry, Hot and Sunny Climates, 0.25x DryRate, 32c, 10% cloud
+Flying = Clear skies and balmy weather, 1x DryRate, 20c, 0% cloud
+Psychic = 1x DryRate, 24c, 
+Bug = 1.25x, 26c, 50% cloud, 15% cloud
+Rock = Dry, Warm Climates; 0.25x DryRate, 28c, 50% cloud
+Ghost = Chilly, Cloudy weather 1x DryRate, 10c, 80% cloud
+Dark = Cold weather, 1x DryRate, 5c, 50% cloud
+Dragon = 1.2x DryRate, 16c, 80% cloud
+Steel = 0.85x DryRate, 13c, 65% cloud
+Fairy = Idyllic weather, 21c, 0% Cloud
