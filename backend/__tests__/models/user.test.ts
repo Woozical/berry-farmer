@@ -77,6 +77,25 @@ describe("Authentication Method", () => {
   });
 });
 
+describe("Delete method", () => {
+  it("removes user and associated entries from db", async () => {
+    await User.delete("u1");
+    let q = await db.query("SELECT * FROM users WHERE username = 'u1' ");
+    expect(q.rowCount).toEqual(0);
+    q = await db.query("SELECT * FROM users");
+    expect(q.rowCount).not.toEqual(0);
+  });
+  
+  it("throws NotFoundError if no such user", async () => {
+    try {
+      await User.delete("idontexist");
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  });
+})
+
 describe("Update method", () => {
   it("updates user with given key/val pairs", async () => {
     const u1 = await User.update("u1", { funds: 500 });

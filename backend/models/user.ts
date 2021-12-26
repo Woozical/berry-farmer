@@ -34,6 +34,20 @@ export default class User {
     return {...result.rows[0], farmCount: Number(result.rows[0].farmCount), funds: Number(result.rows[0].funds)};
   }
 
+  /** Deletes user with given username in database.
+   *  WARNING: This will cascade delete all berries in inventory, all farms owned by user and all crops on those farms.
+   *  Throws NotFoundError if no user with such username
+   */
+  static async delete(username:string){
+    const result = await db.query(
+      `DELETE FROM users WHERE username = $1`,
+      [username]
+    );
+    if (result.rowCount < 1) throw new NotFoundError(`No user with username ${username}`);
+
+    return { deleted: username };
+  }
+
   /** Registers user with given data
    *  Returns { username, email, funds }
    *  Throws BadRequestError on duplicate username and/or email
