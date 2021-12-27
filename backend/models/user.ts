@@ -111,7 +111,7 @@ export default class User {
       `UPDATE users SET ${setCols} WHERE username = $${values.length+1}
        RETURNING username, email, funds`, [...values, username]
     );
-    if (result.rowCount < 1) throw new BadRequestError(`No user with username ${username}`);
+    if (result.rowCount < 1) throw new NotFoundError(`No user with username ${username}`);
     return {...result.rows[0], funds : Number(result.rows[0].funds)};
   }
 

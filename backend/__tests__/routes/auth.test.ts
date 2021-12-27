@@ -92,6 +92,18 @@ describe("POST /auth/register", function () {
     expect(resp.statusCode).toEqual(400);
   });
 
+  test("bad request if username already exists", async function () {
+    const resp = await request(app).post("/auth/register")
+    .send({ username: "usr1", password: "password", email: "new@email.com "});
+    expect(resp.statusCode).toEqual(400);
+  });
+
+  test("bad request if duplicate email", async function () {
+    const resp = await request(app).post("/auth/register")
+    .send({ username: "new", password: "password", email: "user1@user.com" });
+    expect(resp.statusCode).toEqual(400);
+  });
+
   test("bad request with invalid data", async function () {
     const resp = await request(app)
         .post("/auth/register")

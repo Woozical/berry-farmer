@@ -113,12 +113,12 @@ describe("Update method", () => {
     expect(db2.funds).toEqual("15");
   });
 
-  it("throws BadRequestError if given invalid username", async () => {
+  it("throws NotFoundError if given invalid username", async () => {
     try {
       await User.update("idontexist", { funds: 500 });
       fail();
     } catch (err) {
-      expect(err instanceof BadRequestError).toEqual(true);
+      expect(err).toBeInstanceOf(NotFoundError);
     }
   });
 });

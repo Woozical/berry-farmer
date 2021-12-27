@@ -12,8 +12,9 @@ interface SummaryObject {
   region: string
   country: string
 }
-
-const BASE_URL = "http://sec-joblerfieny-api.herokuorinhtrtapp.com/";
+// To Do: Change this after automated testing
+// const BASE_URL = "http://api.weatherapi.com/v1";
+const BASE_URL = "http://isuthnisnhiostns.nseorgnseo";
 /** Namespace for API calls to https://www.weatherapi.com/ */
 export default class WeatherAPI {
 

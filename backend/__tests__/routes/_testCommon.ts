@@ -3,14 +3,12 @@
 import db from "../../db";
 import User from "../../models/user";
 import Farm from "../../models/farm";
-import GeoProfile from "../../models/geoProfiles";
+import Crop from "../../models/crop";
 import { createToken } from "../../utils/token";
-import axios from "axios";
-import API_RESPONSE from "../resources/weather-history-response.json";
 
-jest.mock("axios");
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-// mockedAxios.get.mockResolvedValue({data : API_RESPONSE});
+let locationID:number;
+let farmIDs:Array<number>;
+let cropIDs:Array<number>;
 
 async function seedUsers(){
   const s = [
@@ -22,8 +20,59 @@ async function seedUsers(){
 }
 
 async function seedGeoProfile(){
-  mockedAxios.get.mockResolvedValue({data : API_RESPONSE});
-  await GeoProfile.create("london");
+  const q = await db.query(
+    `INSERT INTO geo_profiles (name, region, country)
+     VALUES ('Las Vegas', 'Nevada', 'United States')
+     RETURNING id`
+  );
+  return q.rows[0].id;
+}
+
+async function seedBerryProfiles(){
+  await db.query(
+    `INSERT INTO berry_profiles (name, growth_time, size, dry_rate, poke_type, poke_power, ideal_temp, ideal_cloud)
+     VALUES ('cheri', 3, 20, 10, 'fire', 60, 90, 15),
+            ('chesto', 3, 80, 30, 'water', 60, 70, 15),
+            ('pecha', 3, 40, 15, 'electric', 60, 70, 70)`
+  );
+}
+
+async function seedFarms(){
+  const f = [
+    Farm.create({owner: "usr1", location: locationID}),
+    Farm.create({owner: "usr2", location: locationID}),
+    Farm.create({owner: "usr2", location: locationID})
+  ]
+  const r = await Promise.all(f);
+  return [r[0].id, r[1].id, r[2].id];
+}
+
+async function seedCrops(){
+  const c = [
+    Crop.create({berryType: "cheri", farmID: farmIDs[0], farmX: 0, farmY: 0}),
+    Crop.create({berryType: "chesto", farmID: farmIDs[1], farmX: 0, farmY: 0}),
+    Crop.create({berryType: "cheri", farmID: farmIDs[2], farmX: 0, farmY: 0}),
+    Crop.create({berryType: "pecha", farmID: farmIDs[2], farmX: 1, farmY: 0}),
+  ]
+  const r = await Promise.all(c);
+  return [r[0].id, r[1].id, r[2].id, r[3].id];
+}
+
+async function seedWeatherData(){
+  await db.query(
+    `INSERT INTO weather_data (location, date, avg_temp, avg_cloud, total_rainfall)
+     VALUES ($1, $2, 10, 10, 1.0 )`,
+    [locationID, new Date()]
+  );
+}
+
+async function seedUserInventories(){
+  const i = [
+    User.addBerry("usr1", "cheri", 1),
+    User.addBerry("usr2", "chesto", 2),
+    User.addBerry("usr3", "pecha", 3)
+  ];
+  await Promise.all(i);
 }
 
 async function commonBeforeAll() {
@@ -37,7 +86,12 @@ async function commonBeforeAll() {
   await db.query("DELETE FROM users");
 
   await seedUsers();
-  // await seedGeoProfile();
+  await seedBerryProfiles();
+  locationID = await seedGeoProfile();
+  farmIDs = await seedFarms();
+  cropIDs = await seedCrops();
+  await seedWeatherData();
+  await seedUserInventories();
 }
 
 async function commonBeforeEach() {
@@ -62,6 +116,9 @@ export {
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
+  locationID,
+  cropIDs,
+  farmIDs,
   u1Token,
   u2Token,
   u3Token

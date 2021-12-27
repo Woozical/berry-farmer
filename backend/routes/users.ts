@@ -12,7 +12,7 @@ const router = express.Router();
 // GET /users/:username (loggedIn, sameUser = hideSensitive is false)
 router.get("/:username", authenticateJWT, ensureLoggedIn, async (req, res, next) => {
   try {
-    const hideSensitive = (res.locals.user.username !== req.params.username);
+    const hideSensitive = (!res.locals.user.isAdmin && res.locals.user.username !== req.params.username);
     const user = await User.get(req.params.username, hideSensitive);
     return res.json({ user, message: "ok" });
   } catch (err) {
@@ -21,7 +21,7 @@ router.get("/:username", authenticateJWT, ensureLoggedIn, async (req, res, next)
 });
 
 // GET /users/:username/farms (loggedIn)
-router.get("/:username/farms", ensureLoggedIn, async (req, res, next) => {
+router.get("/:username/farms", authenticateJWT, ensureLoggedIn, async (req, res, next) => {
   try {
     const farms = await Farm.getByOwner(req.params.username);
     return res.json({ farms, message: "ok" });
@@ -31,7 +31,7 @@ router.get("/:username/farms", ensureLoggedIn, async (req, res, next) => {
 });
 
 // DELETE /user/:username (loggedIn, sameUser)
-router.delete("/:username", ensureSameUser, async (req, res, next) => {
+router.delete("/:username", authenticateJWT, ensureSameUser, async (req, res, next) => {
   try {
     const result = await User.delete(req.params.username);
     return res.json({...result, message: "ok" });
@@ -41,7 +41,7 @@ router.delete("/:username", ensureSameUser, async (req, res, next) => {
 });
 
 // PATCH /user/:username
-router.patch("/:username", ensureAdmin, async (req, res, next) => {
+router.patch("/:username", authenticateJWT, ensureAdmin, async (req, res, next) => {
   try {
     const validator = jsonschema.validate(req.body, userAdminPatch);
     if (!validator.valid) {
