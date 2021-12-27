@@ -231,7 +231,6 @@ describe("ensureOwnedBy", function () {
 
   test("exploit prevent: send owned cropID in body to access un-owned farmID in params", async function () {
     expect.assertions(1);
-    console.log(farmID, farmID2);
     const req = { params: { farmID: `${farmID2}` }, body: { cropID } };
     const res = { locals: { user: { username: "u1", isAdmin:false } } };
     const next = function (err:any) {
@@ -242,7 +241,6 @@ describe("ensureOwnedBy", function () {
 
   test("exploit prevent: send owned farmID in body to access un-owned cropID in params", async function () {
     expect.assertions(1);
-    console.log(farmID, farmID2);
     const req = { params: { cropID: `${cropID2}` }, body: { farmID } };
     const res = { locals: { user: { username: "u1", isAdmin:false } } };
     const next = function (err:any) {
@@ -253,7 +251,6 @@ describe("ensureOwnedBy", function () {
 
   test("exploit prevent: send owned farmID in body to access un-owned farmID in params", async function () {
     expect.assertions(1);
-    console.log(farmID, farmID2);
     const req = { params: { farmID: `${farmID2}` }, body: { farmID } };
     const res = { locals: { user: { username: "u1", isAdmin:false } } };
     const next = function (err:any) {
@@ -264,7 +261,6 @@ describe("ensureOwnedBy", function () {
 
   test("exploit prevent: send owned cropID in body to access un-owned cropID in params", async function () {
     expect.assertions(1);
-    console.log(farmID, farmID2);
     const req = { params: { cropID: `${cropID2}` }, body: { cropID } };
     const res = { locals: { user: { username: "u1", isAdmin:false } } };
     const next = function (err:any) {
