@@ -85,6 +85,16 @@ export default class Farm{
       return res.rows[0].id ? res.rows : [];
   }
 
+  /** Checks to see if the given username is the owner of the farm
+   *  with the givern farmID. Returns NotFoundError if farmID does
+   *  not point to a farm.
+   */
+  static async checkOwnership(farmID:number, username:string): Promise<boolean>{
+    const res = await db.query("SELECT owner FROM farms WHERE id = $1", [farmID]);
+    if (res.rowCount < 1) throw new NotFoundError(`No farm found with id ${farmID}`);
+    return (username === res.rows[0].owner);
+  }
+
   /** Deletes farm with given ID.
    *  Throws NotFoundError if no farm with such id.
    */

@@ -163,6 +163,25 @@ describe("Delete method", () => {
   })
 });
 
+describe("Check ownership method", () => {
+  it("works", async () => {
+    const q = await db.query("SELECT id FROM farms WHERE owner = 'u1' ");
+    const { id:farmID } = q.rows[0];
+    expect( await Farm.checkOwnership(farmID, 'u1') ).toEqual(true);
+    expect( await Farm.checkOwnership(farmID, 'u2') ).toEqual(false);
+    expect( await Farm.checkOwnership(farmID, 'idontexist') ).toEqual(false);
+  });
+
+  it("throws NotFoundError on invalid farm ID", async () => {
+    try {
+      await Farm.checkOwnership(-1, "u1");
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  });
+});
+
 describe("Update method", () => {
   it("works", async () => {
     let q = await db.query("SELECT id FROM farms");

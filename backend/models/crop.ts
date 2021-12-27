@@ -66,6 +66,19 @@ export default class Crop{
       }
     };
   }
+  /** Checks to see if the given username is the owner of the farm
+   *  in which crop of given cropID resides. Returns NotFoundError if cropID does
+   *  not point to a crop.
+   */
+  static async checkOwnership(cropID:number, username:string) : Promise<boolean>{
+    const res = await db.query(
+      `SELECT farms.owner FROM crops
+       LEFT JOIN farms ON farms.id = crops.farm_id 
+       WHERE crops.id = $1`, [cropID]);
+    if (res.rowCount < 1) throw new NotFoundError(`No crop found with id ${cropID}`);
+    return (username === res.rows[0].owner);
+  }
+
   /** Calculates the new health of a crop upon reaching a growth stage, using weather data
    *  moisture, and health at the point of growth.
    */

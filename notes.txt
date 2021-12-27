@@ -2,7 +2,24 @@
 To do: berry buy & sell, daily market prices
 
 (routes)
+crop, farm, geoProfile, market, user, auth
 
+User accessible:
+/auth/register
+/auth/login
+GET /users (loggedIn, sameUser = hideSensitive is false)
+GET /users/:username/farms
+GET /farms/:farmID
+POST /purchase (loggedIn)
+POST /crops (loggedIn, ownedBy) OR POST /farms/:farmID/crops
+DELETE /crops/:cropID (loggedIn, ownedBy)
+DELETE /farms/:farmID (loggedin, ownedBy)
+
+Admin only:
+POST /farms
+PATCH /farms
+PATCH /user
+DELETE /user
 
 Growth process
 

@@ -47,6 +47,25 @@ describe("Get method", () => {
   });
 });
 
+describe("Check ownership method", () => {
+  it("works", async () => {
+    const q = await db.query("SELECT id FROM crops WHERE berry_type = 'cheri' ");
+    const { id:cropID } = q.rows[0];
+    expect( await Crop.checkOwnership(cropID, 'u1') ).toEqual(true);
+    expect( await Crop.checkOwnership(cropID, 'u2') ).toEqual(false);
+    expect( await Crop.checkOwnership(cropID, 'idontexist') ).toEqual(false);
+  });
+
+  it("throws NotFoundError on invalid crop ID", async () => {
+    try {
+      await Crop.checkOwnership(-1, "u1");
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  });
+});
+
 describe("Calculate new health method", () => {
   it("calculates moisture health adjustment correctly", () => {
     const params = { health: 0, avgTemp: 0, avgCloud: 0, idealTemp: 100, idealCloud: 100 };
