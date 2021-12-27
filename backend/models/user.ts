@@ -106,7 +106,7 @@ export default class User {
    *  BAD: User.update("johndoe", req.body); OR User.update("johndoe", {...req.body});
    */
   static async update(username: string, newData:UpdateProps){
-    const { values, setCols } = sqlForPartialUpdate(newData);
+    const { values, setCols } = sqlForPartialUpdate(newData, {isAdmin: "is_admin"});
     const result = await db.query(
       `UPDATE users SET ${setCols} WHERE username = $${values.length+1}
        RETURNING username, email, funds`, [...values, username]

@@ -5,21 +5,44 @@ To do: berry buy & sell, daily market prices
 crop, farm, geoProfile, market, user, auth
 
 User accessible:
-/auth/register
-/auth/login
-GET /users (loggedIn, sameUser = hideSensitive is false)
-GET /users/:username/farms
+POST /auth/register
+ -> { username, email, password }
+ { token } <-
+
+POST /auth/login
+-> { username, password }
+{ token } <- 
+
+GET /users/:username (loggedIn, sameUser = hideSensitive is false)
+GET /users/:username/farms (loggedIn)
+DELETE /user/:username (loggedIn, sameUser)
+
 GET /farms/:farmID
-POST /purchase (loggedIn)
+<- lastCheckedAt > 10 minutes ? -> sync
+
+
+
+POST /farms/buy (loggedIn)
+-> { locationID }
+{ farm } <-
+
+POST /farms/:farmID/upgrade (loggedIn, ownedBy)
+- > { type : "irrigation" OR "length" OR "width" }
+
+POST /farms/:farmID/crops (loggedIn, ownedBy)
+- > { berryType, x, y }
+
+POST /farms/:farmID/sync (loggedIn, ownedBy)
+
 POST /crops (loggedIn, ownedBy) OR POST /farms/:farmID/crops
 DELETE /crops/:cropID (loggedIn, ownedBy)
-DELETE /farms/:farmID (loggedin, ownedBy)
+DELETE /farms/:farmID (loggedIn, ownedBy)
 
 Admin only:
 POST /farms
 PATCH /farms
-PATCH /user
-DELETE /user
+PATCH /user/:username
+
 
 Growth process
 
