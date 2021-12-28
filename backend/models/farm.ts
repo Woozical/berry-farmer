@@ -19,7 +19,7 @@ interface FarmObject {
 }
 
 interface CreateFarmProps {
-  owner: string, location: number, length?: number, 
+  owner: string, locationID: number, length?: number, 
   irrigationLVL?: number, width?: number
 }
 
@@ -107,19 +107,19 @@ export default class Farm{
   }
 
   /** Creates farm */
-  static async create({owner, location, length=DEFAULT_LENGTH, width=DEFAULT_WIDTH, irrigationLVL=0}:CreateFarmProps){
+  static async create({owner, locationID, length=DEFAULT_LENGTH, width=DEFAULT_WIDTH, irrigationLVL=0}:CreateFarmProps){
     try {
       const res = await db.query(
         `INSERT INTO farms (owner, location, length, width, irrigation_lvl)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id, length, width, irrigation_lvl AS "irrigationLVL",
                    owner, location AS "locationID", last_checked_at AS "lastCheckedAt"`,
-        [owner, location, length, width, irrigationLVL]
+        [owner, locationID, length, width, irrigationLVL]
       );
       return { ...res.rows[0] };
     } catch (err:any) {
       if (err.code && err.code === '23503'){
-        const msg = err.constraint === 'farms_owner_fkey' ? `Invalid username ${owner}` : `Invalid location id ${location}`;
+        const msg = err.constraint === 'farms_owner_fkey' ? `Invalid username ${owner}` : `Invalid location id ${locationID}`;
         throw new BadRequestError(msg);
       }
       throw err;

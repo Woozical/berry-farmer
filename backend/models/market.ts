@@ -50,8 +50,9 @@ export default class Market {
       throw new BadRequestError(`${username} has insufficient funds for requested upgrades`);
     }
 
-    await Farm.update(farmID, { length: length + q.rows[0].length, width: width + q.rows[0].width });
+    const farm = await Farm.update(farmID, { length: length + q.rows[0].length, width: width + q.rows[0].width });
     await User.update(username, {funds: Number(q.rows[0].funds) - upgradePrice});
+    return farm;
   }
 
   /** Attempts to purchase an irrigation level upgrade for a given farm.
@@ -79,8 +80,9 @@ export default class Market {
     if ( Number(q.rows[0].funds) < upgradePrice ){
       throw new BadRequestError(`${username} has insufficient funds for requested upgrades`);
     }
-    await Farm.update(farmID, {irrigationLVL: upgradedIrrigLVL});
+    const farm = await Farm.update(farmID, {irrigationLVL: upgradedIrrigLVL});
     await User.update(username, {funds: Number(q.rows[0].funds) - upgradePrice});
+    return farm;
   }
 
   /** Attempts to purchase a new farm plot for a given user.
@@ -103,7 +105,7 @@ export default class Market {
     }
     if (user.funds < Market.PLOT_PRICE) throw new BadRequestError(`${username} has insufficient funds for new farm plot`);
     if (user.farmCount+1 > MAX_PLOTS) throw new BadRequestError(`${username} has reached max amount of farm plots`);
-    const res = await Farm.create({ owner: username, location: locationID });
+    const res = await Farm.create({ owner: username, locationID });
     await User.update(username, { funds: user.funds - Market.PLOT_PRICE });
 
     return res;

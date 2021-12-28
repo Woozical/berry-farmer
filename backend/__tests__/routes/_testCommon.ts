@@ -39,9 +39,9 @@ async function seedBerryProfiles(){
 
 async function seedFarms(){
   const f = [
-    Farm.create({owner: "usr1", location: locationID}),
-    Farm.create({owner: "usr2", location: locationID}),
-    Farm.create({owner: "usr2", location: locationID})
+    Farm.create({owner: "usr1", locationID}),
+    Farm.create({owner: "usr2", locationID}),
+    Farm.create({owner: "usr2", locationID})
   ]
   const r = await Promise.all(f);
   return [r[0].id, r[1].id, r[2].id];

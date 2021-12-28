@@ -20,12 +20,12 @@ const expectFarmObj = {
 }
 
 describe("smoke tests", () => {
-  let id:number, location:number;
+  let id:number, locationID:number;
   beforeAll( async () => {
     const q = await db.query("SELECT * FROM farms");
     id = q.rows[0].id;
     const q2 = await db.query("SELECT * FROM geo_profiles");
-    location = q2.rows[0].id;
+    locationID = q2.rows[0].id;
   });
   test("get method", async () => {
     await Farm.get(id);
@@ -37,7 +37,7 @@ describe("smoke tests", () => {
     await Farm.syncCrops(id);
   });
   test("create method", async () => {
-    await Farm.create({ owner: "u1", location });
+    await Farm.create({ owner: "u1", locationID });
   });
   test("delete method", async () => {
     await Farm.delete(id);
@@ -108,24 +108,24 @@ describe("Get by owner method" , () => {
 describe("Create method", () => {
   it("works", async () => {
     const q = await db.query("SELECT id FROM geo_profiles");
-    const { id:location } = q.rows[0];
-    const res = await Farm.create({ owner: "u1", location });
+    const { id:locationID } = q.rows[0];
+    const res = await Farm.create({ owner: "u1", locationID });
     expect(res).toEqual({
       id: expect.any(Number),
       width: 3, 
       length: 3,
       lastCheckedAt: expect.any(Date),
       irrigationLVL: 0,
-      locationID: location,
+      locationID,
       owner: "u1"
     });
   });
 
   it("throws BadRequestError if invalid owner username", async () => {
     const q = await db.query("SELECT id FROM geo_profiles");
-    const { id } = q.rows[0];
+    const { id: locationID } = q.rows[0];
     try {
-      await Farm.create({owner: "idontexist", location: id});
+      await Farm.create({owner: "idontexist", locationID});
       fail();
     } catch (err) {
       expect(err).toBeInstanceOf(BadRequestError);
@@ -134,7 +134,7 @@ describe("Create method", () => {
 
   it("throws BadRequestError if invalid location id", async () => {
     try {
-      await Farm.create({owner: "u3", location: -1});
+      await Farm.create({owner: "u3", locationID: -1});
       fail();
     } catch (err) {
       expect(err).toBeInstanceOf(BadRequestError);
