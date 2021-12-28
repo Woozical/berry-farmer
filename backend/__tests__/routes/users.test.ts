@@ -177,4 +177,4 @@ describe("PATCH /users/:username", () => {
 
     expect(resp.statusCode).toEqual(404);
   });
-})
+});

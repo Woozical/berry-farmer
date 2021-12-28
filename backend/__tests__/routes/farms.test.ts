@@ -19,8 +19,11 @@ const usr2Token = `Bearer ${u2Token}`;
 const usr3Token = `Bearer ${u3Token}`;
 
 describe("GET /farms/:farmID", () => {
+  let endpoint:string;
+  beforeAll( () => { endpoint = `/farms/${farmIDs[0]}`});
+  
   it("retrieves farm data", async () => {
-    const resp = await request(app).get(`/farms/${farmIDs[0]}`).set("authorization", usr1Token);
+    const resp = await request(app).get(endpoint).set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(200);
     expect(resp.body).toEqual({
       message: "ok",
@@ -53,13 +56,14 @@ describe("GET /farms/:farmID", () => {
   it("responds 211 if time for sync", async () => {
     jest.useFakeTimers("modern");
     jest.setSystemTime(new Date(Date.now() + 3600000));
-    const resp = await request(app).get(`/farms/${farmIDs[0]}`).set("authorization", usr1Token);
+    const resp = await request(app).get(endpoint).set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(211);
     expect("farm" in resp.body).toBeFalsy();
+    jest.useRealTimers();
   });
 
   it("responds 401 if not logged in", async () => {
-    const resp = await request(app).get(`/farms/${farmIDs[0]}`);
+    const resp = await request(app).get(endpoint);
     expect(resp.statusCode).toEqual(401);
   });
 
@@ -170,12 +174,13 @@ describe("POST /farms/buy", () => {
 });
 
 describe("POST /farms/:farmID/upgrade", () => {
+  let endpoint:string;
   beforeAll(async () => {
     await User.update("usr1", { funds: 9999 });
+    endpoint = `/farms/${farmIDs[0]}/upgrade`;
   });
 
   it("works with farm length", async () => {
-    const endpoint = `/farms/${farmIDs[0]}/upgrade`;
     const resp = await request(app).post(endpoint)
     .send({ type: "length" }).set("authorization", usr1Token);
 
@@ -195,7 +200,6 @@ describe("POST /farms/:farmID/upgrade", () => {
   });
 
   it("works with farm width", async () => {
-    const endpoint = `/farms/${farmIDs[0]}/upgrade`;
     const resp = await request(app).post(endpoint)
     .send({ type: "width" }).set("authorization", usr1Token);
 
@@ -215,7 +219,6 @@ describe("POST /farms/:farmID/upgrade", () => {
   });
 
   it("works with farm irrig", async () => {
-    const endpoint = `/farms/${farmIDs[0]}/upgrade`;
     const resp = await request(app).post(endpoint)
     .send({ type: "irrigation" }).set("authorization", usr1Token);
 
@@ -235,14 +238,12 @@ describe("POST /farms/:farmID/upgrade", () => {
   });
 
   it("responds 400 if bad payload", async () => {
-    const endpoint = `/farms/${farmIDs[0]}/upgrade`;
     const resp = await request(app).post(endpoint)
     .send({ type: "coolness" }).set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(400);
   });
 
   it("responds 400 if no payload", async () => {
-    const endpoint = `/farms/${farmIDs[0]}/upgrade`;
     const resp = await request(app).post(endpoint).set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(400);
   });
@@ -258,7 +259,6 @@ describe("POST /farms/:farmID/upgrade", () => {
   });
 
   it("responds 401 if not logged in", async () => {
-    const endpoint = `/farms/${farmIDs[0]}/upgrade`;
     const resp = await request(app).post(endpoint).send({ type: "length" });
     expect(resp.statusCode).toEqual(401);
   });
@@ -277,13 +277,150 @@ describe("POST /farms/:farmID/upgrade", () => {
 });
 
 describe("POST /farms/:farmID/sync", () => {
+  let endpoint:string;
+  beforeAll( () => { endpoint = `/farms/${farmIDs[0]}/sync` });
+  
+  it("works", async () => {
+    const oldFarm = await Farm.get(farmIDs[0]);
+    jest.useFakeTimers("modern");
+    jest.setSystemTime(new Date(Date.now() + 3600000));
+    const resp = await request(app).post(endpoint).set("authorization", usr1Token);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      message: "updated",
+      farm: {
+        crops: [
+          {
+            berryType: 'cheri', curGrowthStage: 0, health: 100, 
+            id: expect.any(Number), moisture: expect.any(Number),
+            plantedAt: expect.any(String), x: 0, y: 0
+          }
+        ],
+        id: farmIDs[0],
+        irrigationLVL: 0,
+        lastCheckedAt: expect.any(String),
+        length: 3,
+        locationCountry: 'United States',
+        locationName: 'Las Vegas',
+        locationRegion: 'Nevada',
+        owner: 'usr1',
+        width: 3
+      }
+    });
+    expect(resp.body.farm.lastCheckedAt).not.toEqual(oldFarm.lastCheckedAt);
+    expect(resp.body.farm.crops[0].moisture).not.toEqual(oldFarm.crops[0].moisture);
+    jest.useRealTimers();
+  });
 
+  it("responds 401 if not logged in", async () => {
+    const resp = await request(app).post(endpoint);
+    expect(resp.statusCode).toEqual(401);
+  });
+  
+  it("responds 403 if not farm owner", async () => {
+    const resp = await request(app).post(endpoint).set("authorization", usr2Token);
+    expect(resp.statusCode).toEqual(403);
+  });
+
+  it("responds 404 if invalid farm id", async () => {
+    const endpoint = "/farms/-1/sync";
+    const resp = await request(app).post(endpoint).set("authorization", usr1Token);
+    expect(resp.statusCode).toEqual(404);
+  });
 });
 
 describe("PATCH /farms/:farmID", () => {
+  let endpoint:string;
+  beforeAll( () => { endpoint = `/farms/${farmIDs[0]}` });
 
+  it("works for admin", async () => {
+    const resp = await request(app).patch(endpoint)
+    .send({ length: 5, width: 6, irrigationLVL: 1 })
+    .set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      message: "updated",
+      farm: {
+        id: farmIDs[0],
+        irrigationLVL: 1,
+        length: 5,
+        width: 6,
+        lastCheckedAt: expect.any(String),
+        owner: "usr1",
+        locationID
+      }
+    });
+  });
+
+  it("responds 400 if bad payload", async () => {
+    const resp = await request(app).patch(endpoint)
+    .send({ lastCheckedAt: "1999-12-31 00:00:00 "})
+    .set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(400);
+  });
+
+  it("responds 400 if no payload", async () => {
+    const resp = await request(app).patch(endpoint)
+    .set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(400);
+  });
+
+  it("responds 401 if not logged in", async () => {
+    const resp = await request(app).patch(endpoint)
+    .send({ length: 5, width: 5 });
+    expect(resp.statusCode).toEqual(401);
+  });
+
+  it("responds 403 if not admin", async () => {
+    const resp = await request(app).patch(endpoint)
+    .send({ length: 5, width: 5 })
+    .set("authorization", usr1Token);
+    expect(resp.statusCode).toEqual(403);
+  });
+
+  it("responds 404 if no such farm", async () => {
+    const resp = await request(app).patch("/farms/-1")
+    .send({ length: 5, width: 5 })
+    .set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(404);
+  });
 });
 
-describe ("DELETE /farms/:farmID", () => {
+describe("DELETE /farms/:farmID", () => {
+  let endpoint:string;
+  beforeAll( () => { endpoint = `/farms/${farmIDs[0]}` });
 
+  it("works for owner", async () => {
+    const resp = await request(app).delete(endpoint).set("authorization", usr1Token);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      message: "ok",
+      deleted: farmIDs[0]
+    });
+  });
+
+  it("works for admin", async () => {
+    const resp = await request(app).delete(endpoint).set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      message: "ok",
+      deleted: farmIDs[0]
+    });
+  });
+
+  it("responds 401 if not logged in", async () => {
+    const resp = await request(app).delete(endpoint);
+    expect(resp.statusCode).toEqual(401);
+  });
+
+  it("responds 403 if not owner of farm", async () => {
+    const resp = await request(app).delete(endpoint).set("authorization", usr2Token);
+    expect(resp.statusCode).toEqual(403);
+  });
+
+  it("responds 404 if no such farm", async () => {
+    const endpoint = "/farms/-1"
+    const resp = await request(app).delete(endpoint).set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(404);
+  });
 });

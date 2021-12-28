@@ -2,7 +2,7 @@
 "use strict";
 
 import jwt from "jsonwebtoken";
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "../../expressError";
+import { BadRequestError, ForbiddenError, NotFoundError, UnauthorizedError } from "../../expressError";
 import { authenticateJWT, ensureLoggedIn, ensureAdmin, ensureSameUser, ensureOwnedBy } from "../../middleware/auth";
 import { SECRET_KEY } from "../../config";
 import { cropID, cropID2, dbAfterAll, dbAfterEach, dbBeforeAll, dbBeforeEach, farmID, farmID2 } from "./_testDBSetup";
@@ -285,6 +285,26 @@ describe("ensureOwnedBy", function () {
     const res = { locals: { user: { username: "u1", isAdmin:false } } };
     const next = function (err:any) {
       expect(err).toBeInstanceOf(BadRequestError);
+    };
+    await ensureOwnedBy(req, res, next);
+  });
+
+  test("404 if no farm", async function () {
+    expect.assertions(1);
+    const req = { params: { farmID: -1 }, body: {} };
+    const res = { locals: { user: { username: "u1", isAdmin:false } } };
+    const next = function (err:any) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    };
+    await ensureOwnedBy(req, res, next);
+  });
+
+  test("404 if no crop", async function () {
+    expect.assertions(1);
+    const req = { params: { cropID: -1 }, body: {} };
+    const res = { locals: { user: { username: "u1", isAdmin:false } } };
+    const next = function (err:any) {
+      expect(err).toBeInstanceOf(NotFoundError);
     };
     await ensureOwnedBy(req, res, next);
   });
