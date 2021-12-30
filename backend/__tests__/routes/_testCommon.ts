@@ -5,6 +5,8 @@ import User from "../../models/user";
 import Farm from "../../models/farm";
 import Crop from "../../models/crop";
 import { createToken } from "../../utils/token";
+import app from "../../app";
+import initMarketPrices from "../../utils/martketPrices";
 
 let locationID:number;
 let farmIDs:Array<number>;
@@ -92,6 +94,11 @@ async function commonBeforeAll() {
   cropIDs = await seedCrops();
   await seedWeatherData();
   await seedUserInventories();
+
+  /** Init our app.locals, since supertest does not use index.ts to start up server */
+  const { mods, prices } = await initMarketPrices();
+  app.locals.marketPrices = prices;
+  app.locals.marketMods = mods;
 }
 
 async function commonBeforeEach() {
