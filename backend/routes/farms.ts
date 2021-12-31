@@ -8,7 +8,8 @@ import farmBuySchema from "../schemas/farmBuy.json";
 import farmUpgradeSchema from "../schemas/farmUpgrade.json";
 import farmAdminCreateSchema from "../schemas/farmAdminCreate.json";
 import farmAdminPatchSchema from "../schemas/farmAdminPatch.json";
-import { authenticateJWT, ensureAdmin, ensureLoggedIn, ensureOwnedBy, ensureSameUser } from "../middleware/auth";
+import { authenticateJWT, ensureAdmin, ensureLoggedIn, ensureOwnedBy } from "../middleware/auth";
+import { checkNumericParams } from "../middleware/params";
 import { BadRequestError } from "../expressError";
 
 const router = express.Router();
@@ -44,7 +45,7 @@ router.post("/buy", authenticateJWT, ensureLoggedIn, async (req, res, next) => {
 });
 
 router.route('/:farmID')
-  .get(authenticateJWT, ensureLoggedIn, async (req, res, next) => {
+  .get(checkNumericParams, authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
       const farmID = Number(req.params.farmID);
       const farm = await Farm.get(farmID);
@@ -57,7 +58,7 @@ router.route('/:farmID')
       return next(err);
     }
   })
-  .patch(authenticateJWT, ensureAdmin, async (req, res, next) => {
+  .patch(checkNumericParams, authenticateJWT, ensureAdmin, async (req, res, next) => {
     try {
       const validator = jsonschema.validate(req.body, farmAdminPatchSchema);
       if (!validator.valid){
@@ -69,7 +70,7 @@ router.route('/:farmID')
       return next(err);
     }
   })
-  .delete(authenticateJWT, ensureOwnedBy, async (req, res, next) => {
+  .delete(checkNumericParams, authenticateJWT, ensureOwnedBy, async (req, res, next) => {
     try {
       const result = await Farm.delete(Number(req.params.farmID));
       return res.json({ ...result, message: "ok" });
@@ -79,21 +80,20 @@ router.route('/:farmID')
   });
 
 // POST /farms/:farmID/sync (loggedIn, ownedBy)
-router.post("/:farmID/sync", authenticateJWT, ensureOwnedBy, async (req, res, next) => {
+router.post("/:farmID/sync", checkNumericParams, authenticateJWT, ensureOwnedBy, async (req, res, next) => {
   try {
     const farmID = Number(req.params.farmID);
     await Farm.syncCrops(farmID);
     const farm = await Farm.get(farmID);
     return res.json({ message: "updated", farm });
   } catch (err) {
-    console.log(err);
     return next(err);
   }
 });
 
 // POST /farms/:farmID/upgrade (loggedIn, ownedBy)
 // - > { type : "irrigation" OR "length" OR "width" }
-router.post("/:farmID/upgrade", authenticateJWT, ensureOwnedBy, async (req, res, next) => {
+router.post("/:farmID/upgrade", checkNumericParams, authenticateJWT, ensureOwnedBy, async (req, res, next) => {
   try {
     const validator = jsonschema.validate(req.body, farmUpgradeSchema);
     if (!validator.valid) {
@@ -120,8 +120,5 @@ router.post("/:farmID/upgrade", authenticateJWT, ensureOwnedBy, async (req, res,
     return next(err);
   }
 });
-
-// PATCH /farms/:farmID (admin only)
-
 
 export default router;

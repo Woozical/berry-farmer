@@ -62,6 +62,11 @@ describe("GET /farms/:farmID", () => {
     jest.useRealTimers();
   });
 
+  it("responds 400 if non-numeric farmID param", async () => {
+    const resp = await request(app).get("/farms/nadfbn").set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(400);
+  });
+
   it("responds 401 if not logged in", async () => {
     const resp = await request(app).get(endpoint);
     expect(resp.statusCode).toEqual(401);
@@ -237,6 +242,12 @@ describe("POST /farms/:farmID/upgrade", () => {
     });
   });
 
+  it("responds 400 if non-numeric farmID param", async () => {
+    const resp = await request(app).post("/farms/nadfbn/upgrade")
+    .send({ type: "irrigation" }).set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(400);
+  });
+
   it("responds 400 if bad payload", async () => {
     const resp = await request(app).post(endpoint)
     .send({ type: "coolness" }).set("authorization", usr1Token);
@@ -312,6 +323,11 @@ describe("POST /farms/:farmID/sync", () => {
     jest.useRealTimers();
   });
 
+  it("responds 400 if non-numeric farmID param", async () => {
+    const resp = await request(app).post("/farms/nadfbn/sync").set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(400);
+  });
+
   it("responds 401 if not logged in", async () => {
     const resp = await request(app).post(endpoint);
     expect(resp.statusCode).toEqual(401);
@@ -350,6 +366,12 @@ describe("PATCH /farms/:farmID", () => {
         locationID
       }
     });
+  });
+
+  it("responds 400 if non-numeric farmID param", async () => {
+    const resp = await request(app).patch("/farms/nadfbn")
+    .send({ length: 4 }).set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(400);
   });
 
   it("responds 400 if bad payload", async () => {
@@ -406,6 +428,11 @@ describe("DELETE /farms/:farmID", () => {
       message: "ok",
       deleted: farmIDs[0]
     });
+  });
+
+  it("responds 400 if non-numeric farmID param", async () => {
+    const resp = await request(app).delete("/farms/nadfbn").set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(400);
   });
 
   it("responds 401 if not logged in", async () => {
