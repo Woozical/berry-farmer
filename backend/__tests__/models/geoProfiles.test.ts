@@ -201,4 +201,175 @@ describe("get weather between", () => {
     expect(resMap.get("2021-12-11")).not.toBeUndefined();
     expect(resMap.get("2021-12-12")).not.toBeUndefined();
   });
-})
+});
+
+describe("filter method", () => {
+  it("works", async () => {
+    await db.query(
+      `INSERT INTO geo_profiles (name, region, country)
+       VALUES ('a0', 'b0', 'c0'),
+              ('a1', 'b1', 'c1'),
+              ('a11', 'b13', 'c14')`
+    );
+    let res = await GeoProfile.filter({ name: "a" });
+    expect(res).toEqual([
+      { id: expect.any(Number), name: "a0", region: "b0", country: "c0" },
+      { id: expect.any(Number), name: "a1", region: "b1", country: "c1" },
+      { id: expect.any(Number), name: "a11", region: "b13", country: "c14" },
+    ]);
+    res = await GeoProfile.filter({ name: "a1" });
+    expect(res).toEqual([
+      { id: expect.any(Number), name: "a1", region: "b1", country: "c1" },
+      { id: expect.any(Number), name: "a11", region: "b13", country: "c14" },
+    ]);
+    res = await GeoProfile.filter({ region: "b", country: "4" });
+    expect(res).toEqual([
+      { id: expect.any(Number), name: "a11", region: "b13", country: "c14" },
+    ]);
+    res = await GeoProfile.filter({ region: "la-la-land", country: "4" });
+    expect(res).toEqual([]);
+  });
+
+  it("throws BadRequestError on bad params", async () => {
+    try {
+      //@ts-ignore
+      await GeoProfile.filter({ coolFactor: 9000 });
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+});
+
+describe("get by ID method", () => {
+  let locationID: number;
+  beforeAll( async () => {
+    const q = await db.query("SELECT id FROM geo_profiles LIMIT 1");
+    locationID = q.rows[0].id;
+  });
+
+  it("works", async () => {
+    const res = await GeoProfile.get(locationID);
+    expect(res).toEqual({ id: locationID, name: "testN", region: "testR", country: "testC" });
+  });
+
+  it("throws NotFoundError if no such geoprofile", async () => {
+    try{
+      await GeoProfile.get(-1);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(NotFoundError)
+    }
+  });
+});
+
+describe("update method", () => {
+  let locationID: number;
+  beforeAll( async () => {
+    const q = await db.query("SELECT id FROM geo_profiles LIMIT 1");
+    locationID = q.rows[0].id;
+  });
+
+  it("works", async () => {
+    const res = await GeoProfile.update(locationID, { name: "newName", region: "newRegion", country: "newCountry"});
+    expect(res).toEqual({
+      id: expect.any(Number),
+      name: "newName",
+      region: "newRegion",
+      country: "newCountry",
+      tzOffset: "0"
+    });
+    // reflected in db
+    const q = await db.query("SELECT * FROM geo_profiles WHERE id = $1", [locationID]);
+    expect(q.rows[0].name).toEqual("newName");
+    expect(q.rows[0].region).toEqual("newRegion");
+    expect(q.rows[0].country).toEqual("newCountry");
+  });
+
+  it("throws NotFoundError if no such geoprofile", async () => {
+    try {
+      await GeoProfile.update(-1, { name: "newName"});
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  })
+});
+
+describe("delete method", () => {
+  let locationID: number;
+  beforeAll( async () => {
+    const q = await db.query("SELECT id FROM geo_profiles LIMIT 1");
+    locationID = q.rows[0].id;
+  });
+
+  it("works", async () => {
+    const res = await GeoProfile.delete(locationID);
+    expect(res).toEqual({ deleted: locationID });
+    const q = await db.query("SELECT * FROM geo_profiles WHERE id = $1", [locationID]);
+    expect(q.rowCount).toEqual(0);
+  });
+
+  it("throws NotFoundError if no such geoprofile", async () => {
+    try {
+      await GeoProfile.delete(-1);
+      fail();
+    } catch(err) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  });
+});
+
+describe("getAll method", () => {
+  beforeAll( async () => {
+    await db.query(
+      `INSERT INTO geo_profiles (name, region, country)
+       VALUES ('a01', 'b', 'c'),
+              ('a01', 'b2', 'c'),
+              ('a01', 'b2', 'c2'),
+              ('a04', 'b', 'c'),
+              ('a05', 'b', 'c'),
+              ('a06', 'b', 'c'),
+              ('a07', 'b', 'c'),
+              ('a08', 'b', 'c'),
+              ('a09', 'b', 'c'),
+              ('a10', 'b', 'c'),
+              ('a11', 'b', 'c'),
+              ('a12', 'b', 'c'),
+              ('a13', 'b', 'c'),
+              ('a14', 'b', 'c'),
+              ('a15', 'b', 'c'),
+              ('a16', 'b', 'c'),
+              ('a17', 'b', 'c'),
+              ('a18', 'b', 'c'),
+              ('a19', 'b', 'c'),
+              ('a20', 'b', 'c'),
+              ('a21', 'b', 'c'),
+              ('a22', 'b', 'c'),
+              ('a23', 'b', 'c'),
+              ('a24', 'b', 'c'),
+              ('a25', 'b', 'c'),
+              ('a26', 'b', 'c'),
+              ('a27', 'b', 'c'),
+              ('a28', 'b', 'c'),
+              ('a29', 'b', 'c'),
+              ('a30', 'b', 'c'),
+              ('a31', 'b', 'c'),
+              ('a32', 'b', 'c'),
+              ('a33', 'b', 'c'),
+              ('a34', 'b', 'c')`
+    );
+  });
+
+  it("works with paging", async () => {
+    const res = await GeoProfile.getAll();
+    // Ordered by name, region, country
+    expect(res[0]).toEqual({ id: expect.any(Number), name: "a01", region: "b", country: "c" });
+    expect(res[1]).toEqual({ id: expect.any(Number), name: "a01", region: "b2", country: "c" });
+    expect(res[2]).toEqual({ id: expect.any(Number), name: "a01", region: "b2", country: "c2" });
+    expect(res.length).toBeLessThanOrEqual(GeoProfile.PAGE_LIMIT);
+    const res2 = await GeoProfile.getAll(1, 20);
+    expect(res2[0]).toEqual({ id: expect.any(Number), name: "a21", region: "b", country: "c" });
+    expect(res2[res2.length-1]).toEqual({ id: expect.any(Number), name: "testN", region: "testR", country: "testC" });
+  });
+});

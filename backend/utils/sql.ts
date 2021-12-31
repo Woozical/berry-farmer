@@ -27,3 +27,37 @@ import { BadRequestError } from "../expressError";
     values: Object.values(dataToUpdate),
   };
 }
+
+/** Accepts an an array 'filters', which contains objects representing conditionals with the following properties:
+ *  column: the name of the column
+ *  operation: the string form operation (e.g. "ILIKE", ">", "<")
+ *  value: the parameter for the WHERE clause
+ *  Returns an object with a string representing a SQL WHERE clause that includes all of the provided conditionals,
+ *  and an array that are the position mapped parameters for each conditional
+ *  ---
+ *  sqlForFilter([
+      {column: "name", operation: "ILIKE", value: "Dog"},
+      {column: "num_employees", operation: ">", value: 3},
+      {column: "num_employees", operation: "<", value: 6}])
+    
+    Returns:
+    {
+      string: '"name" ILIKE $1 AND "num_employees" > $2 AND num_employees < $3',
+      values: ["%Dog%", 3, 6]
+    }
+ */
+export interface SQLFilter {
+  column: string, operation: string, value?: any
+}
+export function sqlForFilter(filters:Array<SQLFilter>){
+  let string = '';
+  let values = [];
+  for (let i = 0; i < filters.length; i++){
+    const condi = {...filters[i]};
+    if (condi.operation.includes("LIKE")) condi.value = `%${condi.value}%`;
+    string += `"${condi.column}" ${condi.operation} $${i+1}`;
+    string = (i === filters.length - 1) ? string : (string + " AND ");
+    values.push(condi.value);
+  }
+  return {string, values};
+}

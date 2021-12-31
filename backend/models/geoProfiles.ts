@@ -1,13 +1,29 @@
 import db from "../db";
 import WeatherAPI from "../utils/weatherAPI";
 import { dateToHString } from "../utils/helpers";
+import { sqlForPartialUpdate, sqlForFilter } from "../utils/sql";
+import type { SQLFilter } from "../utils/sql";
 import { BadRequestError, NotFoundError } from "../expressError";
 
 interface WeatherMapObject {
   avgTemp: number, avgCloud: number, totalRain: number
 }
 
+interface GeoProfileUpdateProps {
+  name?: string, region?: string, country?: string, tzOffset?: number
+}
+
+interface GeoProfileSearchParams {
+  name?: string, region?: string, country?: string
+}
+
 export default class GeoProfile {
+  static PAGE_LIMIT = 20;
+  static filterDefinitions:Map<string, SQLFilter> = new Map([
+    ["name", {column: "name", operation: "ILIKE"}],
+    ["region", {column: "region", operation: "ILIKE"}],
+    ["country", {column:"country", operation: "ILIKE"}]
+  ]);
 
   /** Attempts to find the geo_profile ID of a given location with the
    *  unique name, region, country grouping. Throws NotFoundError on no results.
@@ -17,6 +33,69 @@ export default class GeoProfile {
                               [name, region, country]);
     if (q.rowCount < 1) throw new NotFoundError();
     return q.rows[0].id;
+  }
+
+  /** Get all */
+  static async getAll(page=0, limit=GeoProfile.PAGE_LIMIT){
+    const res = await db.query(
+      `SELECT id, name, region, country
+      FROM geo_profiles
+      ORDER BY name, region, country
+      OFFSET $1
+      LIMIT $2
+      `, [(page * limit), limit]);
+    return res.rows;
+  }
+
+  /** Filter */
+  static async filter(searchParams:GeoProfileSearchParams){
+    // Define filters based on given params
+    const filters:Array<SQLFilter> = [];
+    for (let [key, value] of Object.entries(searchParams)){
+      const filter = GeoProfile.filterDefinitions.get(key);
+      if (filter === undefined){
+        throw new BadRequestError(`Un-supported geo_profile search parameter: ${key}`);
+      }
+      filter!.value = value;
+      filters.push(filter);
+    }
+    // Build WHERE clause
+    const {string:whereString, values:whereValues} = sqlForFilter(filters);
+    const res = await db.query(
+      `SELECT id, name, region, country
+       FROM geo_profiles
+       WHERE ${whereString}
+       ORDER BY name, region, country
+       `, whereValues
+    );
+    return res.rows;
+  }
+
+  /** Get by ID */
+  static async get(locationID:number){
+    const res = await db.query('SELECT id, name, region, country FROM geo_profiles WHERE id = $1', [locationID]);
+    if (res.rowCount < 1) throw new NotFoundError(`No geo profile found with ID of ${locationID}`);
+    return res.rows[0];
+  }
+
+  /** Patch */
+  static async update(locationID:number, data:GeoProfileUpdateProps){
+    const { values, setCols } = sqlForPartialUpdate(data, {"tzOffset" : "tz_offset"});
+    const res = await db.query(
+      `UPDATE geo_profiles SET ${setCols}
+      WHERE id = $${values.length+1}
+      RETURNING id, name, region, country, tz_offset AS "tzOffset"`,
+      [...values, locationID]
+    );
+    if (res.rowCount < 1) throw new NotFoundError(`No geo profile found with ID of ${locationID}`);
+    return res.rows[0];
+  }
+
+  /** Delete */
+  static async delete(locationID:number){
+    const res = await db.query("DELETE FROM geo_profiles WHERE id = $1 RETURNING id", [locationID]);
+    if (res.rowCount < 1) throw new NotFoundError(`No geo profile found with ID of ${locationID}`);
+    return { deleted: res.rows[0].id };
   }
 
   /** Given a valid WeatherAPI search term (e.g. postal code, city name, etc.), queries the WeatherAPI
