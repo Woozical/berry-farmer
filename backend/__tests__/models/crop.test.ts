@@ -47,6 +47,32 @@ describe("Get method", () => {
   });
 });
 
+describe("Get berry profile method", () => {
+  it("works", async () => {
+    const berry = await Crop.getBerryProfile("cheri");
+    expect(berry).toEqual({
+      name: "cheri",
+      dryRate: 10,
+      growthTime: 3,
+      idealCloud: 15,
+      idealTemp: 90,
+      maxHarvest: 5,
+      pokePower: 60,
+      pokeType: "fire",
+      size: 20
+    });
+  });
+
+  it("throws NotFoundError on invalid berry name", async () => {
+    try {
+      await Crop.getBerryProfile("idontexist");
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  });
+});
+
 describe("Check ownership method", () => {
   it("works", async () => {
     const q = await db.query("SELECT id FROM crops WHERE berry_type = 'cheri' ");

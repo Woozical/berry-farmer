@@ -66,6 +66,28 @@ export default class Crop{
       }
     };
   }
+
+  /** Retrieves the berry stat profile of the given berry type from the DB.
+   *  Returns { name, growthTime, maxHarvest, size, dryRate, pokeType, pokePower, idealTemp, idealCloud }
+   *  Throws NotFoundError on invalid berry type.
+   * 
+   *  If berry_profiles warrants more operations for it to have its own class namespace, this should be moved there.
+   */
+  static async getBerryProfile(berryType:string){
+    const res = await db.query(
+      `SELECT name, growth_time AS "growthTime", max_harvest AS "maxHarvest", size,
+              dry_rate AS "dryRate", poke_type AS "pokeType", poke_power AS "pokePower",
+              ideal_temp AS "idealTemp", ideal_cloud AS "idealCloud"
+       FROM berry_profiles
+       WHERE name = $1`, [berryType]
+    );
+    if (res.rowCount < 1) throw new NotFoundError(`No berry profile found with name ${berryType}`);
+    return { ...res.rows[0], 
+      dryRate: Number(res.rows[0].dryRate), size: Number(res.rows[0].size), pokePower: Number(res.rows[0].pokePower), 
+      idealTemp: Number(res.rows[0].idealTemp), idealCloud: Number(res.rows[0].idealCloud)
+    };
+  }
+
   /** Checks to see if the given username is the owner of the farm
    *  in which crop of given cropID resides. Returns NotFoundError if cropID does
    *  not point to a crop.
@@ -166,7 +188,7 @@ export default class Crop{
       health: Number(res.rows[0].health)
     };
   }
-  /** Creates a new crop with given data
+  /** Creates a new crop with given data. farmX and farmY are zero-indexed coordinates.
    *  Throws BadRequestError on duplicate farm coordinates, invalid berry type or invalid farm id,
    *  or if provided X and Y coords excede the length/width of given farm
    */
