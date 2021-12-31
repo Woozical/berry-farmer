@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "cropCreate",
+  "type": "object",
+  "properties": {
+    "farmID" : {
+      "type": "integer",
+      "minimum": 1
+    },
+    "x" : {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "y" : {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "berryType" : {
+      "type": "string",
+      "minLength": 1
+    },
+    "curGrowthStage" : {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4
+    }
+  },
+  "additionalProperties": false,
+  "required": ["farmID", "x", "y", "berryType"]
+}

@@ -90,11 +90,13 @@ async function ensureOwnedBy(req:Request, res:Response, next:NextFunction) {
     if (res.locals.user.isAdmin === true) return next();
     if (req.params.cropID){
       const cropID = Number(req.params.cropID);
+      if (cropID !== cropID) throw new BadRequestError("Received non-numeric cropID when attempting to verify crop ownership.")
       const v = await Crop.checkOwnership(cropID, res.locals.user.username);
       if (!v) throw new ForbiddenError(fMsg)
     }
     else if (req.params.farmID || req.body.farmID){
-      const farmID = Number(req.params.farmID) || req.body.farmID;
+      const farmID = Number(req.params.farmID) || Number(req.body.farmID);
+      if (farmID !== farmID)throw new BadRequestError("Received non-numeric farmID when attempting to verify farm ownership.");
       const v = await Farm.checkOwnership(farmID, res.locals.user.username);
       if (!v) throw new ForbiddenError(fMsg)
     } else {

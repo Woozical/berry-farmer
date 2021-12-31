@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "cropAdminPatch",
+  "type": "object",
+  "properties": {
+    "curGrowthStage" : {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4
+    },
+    "health" : {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "moisture" : {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    }
+  },
+  "additionalProperties": false,
+  "required": []
+}

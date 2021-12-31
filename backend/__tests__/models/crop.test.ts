@@ -24,7 +24,7 @@ describe("Get method", () => {
         type: "cheri",
         growthTime: 3,
         maxHarvest: 5,
-        size: '20',
+        size: 20,
         dryRate: 10,
         pokeType: 'fire',
         pokePower: 60,

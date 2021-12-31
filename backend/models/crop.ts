@@ -61,7 +61,7 @@ export default class Crop{
       moisture : Number(moisture),
       health : Number(health),
       berry: {
-        type, growthTime, maxHarvest, size, pokeType, 
+        type, growthTime, maxHarvest, size: Number(size), pokeType, 
         dryRate: Number(dryRate), pokePower: Number(pokePower),
         idealCloud: Number(idealCloud), idealTemp: Number(idealTemp)
       }
