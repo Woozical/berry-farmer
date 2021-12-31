@@ -6,6 +6,7 @@ import jsonschema from "jsonschema";
 import { invalidBadRequest } from "../utils/helpers";
 import userLoginSchema from "../schemas/userLogin.json";
 import userRegisterSchema from "../schemas/userRegister.json";
+import { NEW_ACCOUNT_FUNDS } from "../config";
 
 const router = express.Router();
 
@@ -45,6 +46,8 @@ router.post("/login", async (req, res, next) => {
     }
 
     const newUser = await User.register({ ...req.body });
+    // Start new users with initial funds
+    await User.update(newUser.username, { funds: NEW_ACCOUNT_FUNDS });
     const token = createToken(newUser);
     return res.status(201).json({ token });
   } catch (err) {

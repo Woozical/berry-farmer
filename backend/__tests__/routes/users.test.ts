@@ -26,7 +26,10 @@ describe("GET /users/:username", () => {
         username: "usr1",
         email: "user1@user.com",
         funds: 0,
-        farmCount: 1
+        farmCount: 1,
+        inventory: {
+          cheri: 1
+        }
       }
     });
   });
@@ -40,7 +43,10 @@ describe("GET /users/:username", () => {
         username: "usr1",
         email: "user1@user.com",
         funds: 0,
-        farmCount: 1
+        farmCount: 1,
+        inventory: {
+          cheri: 1
+        }
       }
     });
   });
@@ -53,7 +59,10 @@ describe("GET /users/:username", () => {
       user: {
         username: "usr1",
         funds: 0,
-        farmCount: 1
+        farmCount: 1,
+        inventory: {
+          cheri: 1
+        }
       }
     });
   });

@@ -1,10 +1,12 @@
 "use strict";
 import request from "supertest";
 import app from "../../app";
+import User from "../../models/user";
 import {
   commonBeforeAll, commonBeforeEach,
   commonAfterEach, commonAfterAll
 } from "./_testCommon";
+import { NEW_ACCOUNT_FUNDS } from "../../config";
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -82,6 +84,19 @@ describe("POST /auth/register", function () {
       "token": expect.any(String),
     });
   });
+
+  test("initializes user with starting funds", async function () {
+    const resp = await request(app)
+          .post("/auth/register")
+          .send({
+            username: "new",
+            password: "password",
+            email: "new@email.com"
+          });
+    expect(resp.statusCode).toEqual(201);
+    const user = await User.get("new");
+    expect(user.funds).toEqual(NEW_ACCOUNT_FUNDS);
+  })
 
   test("bad request with missing fields", async function () {
     const resp = await request(app)
