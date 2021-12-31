@@ -215,7 +215,7 @@ describe("purchase berry", () => {
     await Market.purchaseBerry("u1", "cheri", 50, 5);
     // changes reflect in db
     let q = await db.query("SELECT funds FROM users WHERE username = 'u1' ");
-    /** 15% Buy Markup, defined in method, check here if changed */
+    /** 15% Buy Markup, defined as static property of Market class, check here if changed */
     expect(q.rows[0].funds).toEqual("9711.5");
     q = await db.query("SELECT amount FROM user_inventories WHERE username = 'u1' AND berry_type = 'cheri' ");
     expect(q.rows[0].amount).toEqual(6);

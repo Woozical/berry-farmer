@@ -17,6 +17,7 @@ export default class Market {
   static IRRIG_PRICE = 300;
   static PLOT_PRICE = 1000;
   static LW_PRICE = 100;
+  static BERRY_PURCHASE_MARKUP = 1.15;
 
   /** Attempts to purchase a length and/or width upgrade for a given farm.
    *  The farm must be owned by the provided username, and that user must have
@@ -119,7 +120,6 @@ export default class Market {
    *  Throws BadRequestError if invalid username or insufficient user funds for purchase
    */
   static async purchaseBerry(username:string, berryType:string, berryPrice:number, berryAmount:number){
-    const BUY_MARKUP = 1.15;
     let user;
     try {
       user = await User.get(username);
@@ -128,7 +128,7 @@ export default class Market {
       else throw err;
     }
     /** Berries are purchased at a markup of their market value */
-    const buyOrderPrice = Number((berryPrice * BUY_MARKUP * berryAmount).toFixed(2));
+    const buyOrderPrice = Number((berryPrice * Market.BERRY_PURCHASE_MARKUP * berryAmount).toFixed(2));
     if (user.funds < buyOrderPrice) throw new BadRequestError(`${username} has insufficient funds for purchase. Required: ${buyOrderPrice}.`);
     await User.addBerry(username, berryType, berryAmount);
     await User.update(username, { funds: user.funds - buyOrderPrice });
