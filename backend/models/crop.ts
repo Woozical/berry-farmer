@@ -2,6 +2,7 @@ import db from "../db";
 import { BadRequestError, NotFoundError } from "../expressError";
 import { sqlForPartialUpdate } from "../utils/sql";
 import { falsyNoZero } from "../utils/helpers";
+import User from "./user";
 
 interface UpdateProps {
   curGrowthStage?: number,
@@ -239,5 +240,31 @@ export default class Crop{
     if (res.rowCount < 1) throw new NotFoundError(`No crop with id ${cropID}`);
 
     return { deleted : cropID };
+  }
+
+  /** Method for harvest operations, checks if given cropID is ready for harvest (growthStage 4) 
+   *  If so, calculates harvest amount using crop health, then adds that amount of berries to farm
+   *  owner's inventory. Finally, deletes the crop from the DB.
+   * 
+   *  Throws BadRequestError if given crop is not at max growth stage (4)
+   *  Throws NotFoundError if crop with id does not exist
+  */
+  static async harvest(cropID:number){
+    const q = await db.query(
+      `SELECT c.health, c.cur_growth_stage AS "curGrowthStage", c.berry_type AS "berryType",
+              f.owner,
+              bp.max_harvest AS "maxHarvest"
+       FROM crops c
+       JOIN farms f ON c.farm_id = f.id
+       JOIN berry_profiles bp ON c.berry_type = bp.name
+       WHERE c.id = $1`, [cropID]
+    );
+    if (q.rowCount < 1) throw new NotFoundError(`No crop with ${cropID}`);
+    const { berryType, curGrowthStage, health, maxHarvest, owner } = q.rows[0];
+    if (curGrowthStage < 4) throw new BadRequestError(`Crop with id ${cropID} not ready for harvest, growth: ${curGrowthStage}/4`);
+    const harvestAmount = Math.floor((Number(health) * 0.01) * maxHarvest);
+    if (harvestAmount > 0) await User.addBerry(owner, berryType, harvestAmount);
+    await Crop.delete(cropID);
+    return { amount: harvestAmount, berryType }
   }
 }

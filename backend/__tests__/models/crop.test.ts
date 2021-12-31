@@ -331,3 +331,73 @@ describe("create method", () => {
     }
   });
 });
+
+describe("harvest method", () => {
+  let cropID:number, berryType:string, owner:string;
+  beforeAll( async () => {
+    const q = await db.query(
+      `SELECT crops.id, crops.berry_type AS "berryType", farms.owner
+      FROM crops 
+      JOIN farms ON crops.farm_id = farms.id
+      ORDER BY crops.id
+      LIMIT 1
+      `);
+    cropID = q.rows[0].id;
+    owner = q.rows[0].owner;
+    berryType = q.rows[0].berryType;
+  });
+
+  it("works, full health", async () => {
+    await db.query(`UPDATE crops SET cur_growth_stage = 4 WHERE id = $1`, [cropID]);
+    const res = await Crop.harvest(cropID);
+    expect(res.amount).toEqual(5);
+    expect(res.berryType).toEqual(berryType);
+    // changes reflect in db
+    let q = await db.query(`SELECT * FROM crops WHERE id = $1`, [cropID]);
+    expect(q.rowCount).toEqual(0);
+    q = await db.query(`SELECT amount FROM user_inventories WHERE username = $1 AND berry_type = $2`, [owner, berryType]);
+    expect(q.rows[0].amount).toEqual(6);
+  });
+
+  it("works, half health", async () => {
+    await db.query(`UPDATE crops SET cur_growth_stage = 4, health = 50 WHERE id = $1`, [cropID]);
+    const res = await Crop.harvest(cropID);
+    expect(res.amount).toEqual(2);
+    expect(res.berryType).toEqual(berryType);
+    // changes reflect in db
+    let q = await db.query(`SELECT * FROM crops WHERE id = $1`, [cropID]);
+    expect(q.rowCount).toEqual(0);
+    q = await db.query(`SELECT amount FROM user_inventories WHERE username = $1 AND berry_type = $2`, [owner, berryType]);
+    expect(q.rows[0].amount).toEqual(3);
+  });
+
+  it("works, no health", async () => {
+    await db.query(`UPDATE crops SET cur_growth_stage = 4, health = 0 WHERE id = $1`, [cropID]);
+    const res = await Crop.harvest(cropID);
+    expect(res.amount).toEqual(0);
+    expect(res.berryType).toEqual(berryType);
+    // changes reflect in db
+    let q = await db.query(`SELECT * FROM crops WHERE id = $1`, [cropID]);
+    expect(q.rowCount).toEqual(0);
+    q = await db.query(`SELECT amount FROM user_inventories WHERE username = $1 AND berry_type = $2`, [owner, berryType]);
+    expect(q.rows[0].amount).toEqual(1);
+  });
+
+  it("throws BadRequestError if not at max growth stage", async () => {
+    try {
+      await Crop.harvest(cropID);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws NotFoundError if no such crop with given ID", async () => {
+    try {
+      await Crop.harvest(-1);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(NotFoundError);
+    }
+  })
+});
