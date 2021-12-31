@@ -18,11 +18,11 @@ interface UpdateProps{
 export default class User {
 
   /** Finds user with given username in database
-   *  Returns { username, funds, farmCount } if hideSensitive=true, { username, email, funds, farmCount } if hideSensitive=false
+   *  Returns { username, funds, farmCount, inventory, email }, email omitted if hideSensitive = true
    *  Throws NotFoundError if no user with such username
    */
   static async get(username:string, hideSensitive:boolean=true){
-    const result = await db.query(
+    let result = await db.query(
       `SELECT username, count(farms.id) AS "farmCount", funds ${hideSensitive ? '' : ', email'}
        FROM users
        FULL JOIN farms ON farms.owner = users.username
@@ -30,8 +30,13 @@ export default class User {
        GROUP BY username`, [username]
     );
     if (result.rowCount < 1) throw new NotFoundError(`No user with username ${username}`);
-
-    return {...result.rows[0], farmCount: Number(result.rows[0].farmCount), funds: Number(result.rows[0].funds)};
+    const user = {...result.rows[0], farmCount: Number(result.rows[0].farmCount), funds: Number(result.rows[0].funds)};
+    // get user inventory
+    result = await db.query('SELECT berry_type AS "berryType", amount FROM user_inventories WHERE username = $1', [username]);
+    const inventory = {};
+    //@ts-ignore
+    for (let row of result.rows) inventory[row.berryType] = row.amount;
+    return { ...user, inventory };
   }
 
   /** Deletes user with given username in database.
@@ -160,7 +165,7 @@ export default class User {
     if (amount > 0) throw new BadRequestError("Berry amount must be negative");
     try {
       const res = await User.invBerryUpdate(username, berryType, amount);
-      if (res.rowCount < 1) throw new BadRequestError(`Invalid username ${username} or berryType ${berryType}`);
+      if (res.rowCount < 1) throw new BadRequestError(`No inventory match between username ${username} and berryType ${berryType}`);
     } catch (err:any) {
       if (err instanceof BadRequestError) throw err
       else if (err.constraint && err.constraint === 'positive_amount'){

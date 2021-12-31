@@ -126,12 +126,30 @@ describe("Update method", () => {
 describe("Get method", () => {
   it("retrieves user info with given username", async () => {
     const res = await User.get("u1", false);
-    expect(res).toEqual({username: "u1", farmCount: 1, email: "u1@mail.com", funds: 0});
+    expect(res).toEqual({
+      username: "u1", farmCount: 1, email: "u1@mail.com", funds: 0,
+      inventory: {
+        cheri: 1
+      }
+    });
   });
+
+  it("works with empty inventory", async () => {
+    await db.query("DELETE FROM user_inventories WHERE username = 'u2'");
+    const res = await User.get("u2");
+    expect(res).toEqual({
+      username: "u2", farmCount: 1, funds: 0, inventory: {}
+    });
+  })
 
   it("respects privacy by default", async () => {
     const res = await User.get("u3");
-    expect(res).toEqual({username: "u3", farmCount: 0, funds: 0});
+    expect(res).toEqual({
+      username: "u3", farmCount: 0, funds: 0,
+      inventory: {
+        pecha: 3
+      }
+    });
   });
   
   it("throws NotFoundError if given invalid username", async () => {
