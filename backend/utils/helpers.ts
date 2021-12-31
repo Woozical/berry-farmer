@@ -11,7 +11,7 @@ function falsyNoZero(value:any):boolean{
  *  at which point it will throw an error.
  */
 async function asyncReattempt(callBack:Function, maxAttempts:number, count=0) : Promise<any>{
-  if (count >= maxAttempts) throw new Error(`Exceded maximum reattempts on asynchronous operaton ${callBack.name}`);
+  if (count >= maxAttempts) throw new Error(`Exceded maximum reattempts on asynchronous operation ${callBack.name}`);
   try {
     return await callBack();
   } catch (err:any){

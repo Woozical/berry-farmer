@@ -4,6 +4,8 @@ const SECRET_KEY = process.env.SECRET_KEY || "secret-dev";
 const PORT = process.env.PORT ? +process.env.PORT : 3001;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY || "wAPI-key-dev"; 
 const NEW_ACCOUNT_FUNDS = 1500;
+const FARM_SYNC_TIMER = 600000; // time, in ms, inbetween farm syncs in which a new sync must be performed to access or modify the farm
+const API_URL = (process.env.NODE_ENV === "test") ? "http://deadendpoint.blahblah" : "http://api.weatherapi.com/v1";
 
 // Use dev database, testing database, or via env var, production database
 function getDatabaseUri() {
@@ -25,6 +27,8 @@ if (process.env.NODE_ENV !== "test"){
 }
 
 export {
+  API_URL,
+  FARM_SYNC_TIMER,
   NEW_ACCOUNT_FUNDS,
   SECRET_KEY,
   PORT,

@@ -73,11 +73,11 @@ export default class GeoProfile {
 
     const weatherData = new Map();
     const res = await db.query(
-      `SELECT date, avg_temp AS "avgTemp", avg_cloud AS "avgCloud", total_rainfall AS "totalRain",
+      `SELECT wd.date, wd.avg_temp AS "avgTemp", wd.avg_cloud AS "avgCloud", wd.total_rainfall AS "totalRain",
               gp.name, gp.region, gp.country
-       FROM weather_data
-       LEFT JOIN geo_profiles gp ON gp.id = weather_data.location
-       WHERE location = $1
+       FROM geo_profiles gp
+       LEFT JOIN weather_data wd ON gp.id = wd.location
+       WHERE gp.id = $1
        AND date BETWEEN $2 and $3
        ORDER BY date`, [locationID, startDate, endDate]
     );
@@ -86,8 +86,20 @@ export default class GeoProfile {
     const expected = 1 + ((endDate.getTime() - startDate.getTime()) / 86400000);
     if (res.rowCount < expected){
       // if not, do API calls to fill out missing
-      const { name, region, country } = res.rows[0];
-      const locString = `${name}, ${region}, ${country}`;
+      let name:string, region:string, country:string;
+      // if we have at least partial data from our first query, use that to make our API location search term
+      if (res.rowCount > 0){
+        name = res.rows[0].name;
+        region = res.rows[0].region;
+        country = res.rows[0].country;
+      // if not, we need to do another query just for that info
+      } else {
+        const q = await db.query("SELECT name, region, country FROM geo_profiles WHERE id = $1", [locationID]);
+        name = q.rows[0].name;
+        region = q.rows[0].region;
+        country = q.rows[0].country;
+      }
+      const locString = `${name} ${region} ${country}`;
       const dates = new Set();
       const requests = [];
       for (let row of res.rows){
@@ -103,14 +115,21 @@ export default class GeoProfile {
       }
       // wait for all our API calls to come back
       const apiRes = await Promise.all(requests);
-      // put api data into our return Map object
+      // put api data into our return Map object, and begin to build our SQL query
+      let values = "VALUES ";
       for (let response of apiRes){
         const data = WeatherAPI.summaryWeatherData(response);
         weatherData.set(data.date, {
           avgTemp: data.avgTemp, avgCloud: data.avgCloud,
           totalRain: data.totalRainfall
         });
+        values = values + `($1, '${data.date}', ${data.avgTemp}, ${data.avgCloud}, ${data.totalRainfall}),`;
       }
+      values = values.slice(0, values.length-1) + ";";
+      // start the query to insert missing data into db but do not await it, not necessary for our response
+      db.query(
+        `INSERT INTO weather_data (location, date, avg_temp, avg_cloud, total_rainfall) ${values}`, [locationID]
+      );
     }
     
     // use what DB info we have to build out return Map
@@ -119,8 +138,6 @@ export default class GeoProfile {
         avgTemp: Number(avgTemp), avgCloud: Number(avgCloud), totalRain: Number(totalRain)
       });
     });
-    // start the query to insert missing data into db but do not await it
-    
     return weatherData;
   }
 }

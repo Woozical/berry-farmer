@@ -1,5 +1,5 @@
 import axios from "axios";
-import { WEATHER_API_KEY } from "../config";
+import { WEATHER_API_KEY, API_URL } from "../config";
 import { asyncReattempt, dateToHString } from "./helpers";
 import type HistoryAPIResponse from "../schemas/HistoryAPIResponse";
 
@@ -12,15 +12,19 @@ interface SummaryObject {
   region: string
   country: string
 }
-// To Do: Change this after automated testing
-// const BASE_URL = "http://api.weatherapi.com/v1";
-const BASE_URL = "http://isuthnisnhiostns.nseorgnseo";
-/** Namespace for API calls to https://www.weatherapi.com/ */
+/** Namespace for API calls to https://api.weatherapi.com/ */
 export default class WeatherAPI {
-
+  /** Calls external web API for weather information at the given location on the given date.
+   *  Date should be a string in YYYY-MM-DD format (leading 0s for single digit days/months)
+   *  Location should ideally be the full location: name, region and country. (E.g. Houston Texas United States)
+   *  
+   *  If our API calls fail for network or server errors (on their end) then we will attempt
+   *   up to 3 additional times for a response.
+   */
   static async getWeatherOn(location:string, date: string): Promise<HistoryAPIResponse>{
+     if (process.env.NODE_ENV !== "test") console.log("Calling Weather API for location, date:", location, date);
     const params = { key: WEATHER_API_KEY, q: location, dt: date };
-    const endpoint = BASE_URL + "/history.json";
+    const endpoint = `${API_URL}/history.json`;
     try {
       const res = await axios.get(endpoint, { params });
       return res.data
@@ -38,6 +42,9 @@ export default class WeatherAPI {
     }
   }
 
+  /** Similar to getWeatherOn, only for a date range. Requests are made for each sequential date inbetween
+   *  the start and end date, inclusive. API requests are sent out concurrently.
+   */
   static async getWeatherBetween(location:string, startDate:Date, endDate:Date){
     const requests = [];
     // Convert start and end date to Midnight  of those dates, then save unix epoch to variable

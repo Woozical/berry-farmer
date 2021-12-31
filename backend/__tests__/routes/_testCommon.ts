@@ -63,8 +63,9 @@ async function seedCrops(){
 async function seedWeatherData(){
   await db.query(
     `INSERT INTO weather_data (location, date, avg_temp, avg_cloud, total_rainfall)
-     VALUES ($1, $2, 10, 10, 1.0 )`,
-    [locationID, new Date()]
+     VALUES ($1, $2, 10, 10, 1.0 ),
+            ($1, $3, 10, 10, 1.0 )`,
+    [locationID, new Date(), new Date(Date.now() + 86400000)]
   );
 }
 
