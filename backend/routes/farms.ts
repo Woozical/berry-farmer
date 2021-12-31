@@ -11,6 +11,7 @@ import farmAdminPatchSchema from "../schemas/farmAdminPatch.json";
 import { authenticateJWT, ensureAdmin, ensureLoggedIn, ensureOwnedBy } from "../middleware/auth";
 import { checkNumericParams } from "../middleware/params";
 import { BadRequestError } from "../expressError";
+import { FARM_SYNC_TIMER } from "../config";
 
 const router = express.Router();
 
@@ -50,7 +51,7 @@ router.route('/:farmID')
       const farmID = Number(req.params.farmID);
       const farm = await Farm.get(farmID);
       /** If 10 minutes have passed since last crop sync, resource must be updated before being accessed */
-      if (Date.now() - farm.lastCheckedAt.getTime() > 600000){
+      if (Date.now() - farm.lastCheckedAt.getTime() > FARM_SYNC_TIMER){
         return res.status(211).json({ message: `needs crop sync. send POST request to /farms/${farmID}/sync` });
       }
       return res.json({ message: "ok", farm });

@@ -259,12 +259,34 @@ export default class Crop{
        JOIN berry_profiles bp ON c.berry_type = bp.name
        WHERE c.id = $1`, [cropID]
     );
-    if (q.rowCount < 1) throw new NotFoundError(`No crop with ${cropID}`);
+    if (q.rowCount < 1) throw new NotFoundError(`No crop with id ${cropID}`);
     const { berryType, curGrowthStage, health, maxHarvest, owner } = q.rows[0];
     if (curGrowthStage < 4) throw new BadRequestError(`Crop with id ${cropID} not ready for harvest, growth: ${curGrowthStage}/4`);
     const harvestAmount = Math.floor((Number(health) * 0.01) * maxHarvest);
     if (harvestAmount > 0) await User.addBerry(owner, berryType, harvestAmount);
     await Crop.delete(cropID);
     return { amount: harvestAmount, berryType }
+  }
+
+  /** Modifies an existing crop, adding the given amount to its moisture level
+   *  Returns an object with updated crop information, similar to update
+   *  Throws BadRequestError if negative amount (setting or deducting moisture should be done with update method)
+   *  Throws NotFoundError if no such crop
+   */
+  static async water(cropID:number, amount:number){
+    if (amount < 0) throw new BadRequestError("Watering amount must be positive");
+    const res = await db.query(
+      `UPDATE crops SET moisture = (moisture + $1) WHERE id = $2
+      RETURNING id, moisture, health, cur_growth_stage AS "curGrowthStage",
+      planted_at AS "plantedAt", berry_type AS "berryType",
+      farm_id AS "farmID", farm_x AS "x", farm_y AS "y"`,
+      [amount, cropID]
+    );
+    if (res.rowCount < 1) throw new NotFoundError(`No crop with id ${cropID}`);
+    return {
+      ...res.rows[0],
+      moisture: Number(res.rows[0].moisture),
+      health: Number(res.rows[0].health)
+    };
   }
 }

@@ -66,7 +66,7 @@ describe("PATCH /crops/:cropID", () => {
   let endpoint:string;
   beforeAll(() => { endpoint = `/crops/${cropIDs[0]}`});
 
-  it("works", async () => {
+  it("works: admin", async () => {
     const resp = await request(app).patch(endpoint)
     .send({ moisture: 44, curGrowthStage: 2 }).set("authorization", usr3Token);
     expect(resp.statusCode).toEqual(200);
@@ -86,6 +86,27 @@ describe("PATCH /crops/:cropID", () => {
     });
   });
 
+  it("works: owner", async () => {
+    await Crop.update(cropIDs[0], { moisture: 10 });
+    const resp = await request(app).patch(endpoint)
+    .send({ moisture: 25 }).set("authorization", usr1Token);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      message: "updated",
+      crop: {
+        berryType: "cheri",
+        farmID: expect.any(Number),
+        health: 100,
+        id: expect.any(Number),
+        curGrowthStage: 0,
+        moisture: 35,
+        plantedAt: expect.any(String),
+        x: 0,
+        y: 0
+      }
+    });
+  });
+
   it("responds 400 if non-numeric cropID", async () => {
     const resp = await request(app).patch("/crops/flarnanej")
     .send({ moisture: 44, curGrowthStage: 2 }).set("authorization", usr3Token);
@@ -98,9 +119,15 @@ describe("PATCH /crops/:cropID", () => {
     expect(resp.statusCode).toEqual(400);
   });
 
-  it("responds 400 if bad payload", async () => {
+  it("admin: responds 400 if bad payload", async () => {
     const resp = await request(app).patch(endpoint)
     .send({ owner: "usr3", plantedAt: "1999-12-21" }).set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(400);
+  });
+
+  it("owner: responds 400 if bad payload", async () => {
+    const resp = await request(app).patch(endpoint)
+    .send({ moisture: 100, plantedAt: "1999-12-21" }).set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(400);
   });
 
@@ -110,9 +137,15 @@ describe("PATCH /crops/:cropID", () => {
     expect(resp.statusCode).toEqual(401);
   });
 
-  it("responds 403 if not admin", async () => {
+  it("responds 403 if not owner", async () => {
     const resp = await request(app).patch(endpoint)
-    .send({ moisture: 44, curGrowthStage: 2 }).set("authorization", usr1Token);
+    .send({ moisture: 44, curGrowthStage: 2 }).set("authorization", usr2Token);
+    expect(resp.statusCode).toEqual(403);
+  });
+
+  it("responds 403 if attempting to patch non-moisture fields and not admin", async () => {
+    const resp = await request(app).patch(endpoint)
+    .send({ moisture: 30, curGrowthStage: 4 }).set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(403);
   });
 
@@ -242,7 +275,13 @@ describe("POST /crops", () => {
         moisture: 0
       }
     });
+    // Route deducts berry for non-admins
+    const user = await User.get("usr1");
+    expect(user.inventory.cheri).toEqual(0);
   });
+
+  // it("non-admin: responds 211 if farm needs sync")
+
   it("responds 400 if non-admin lacks berry to plant", async () => {
     const resp = await request(app).post("/crops")
     .send({ farmID: farmIDs[0], berryType: "pecha", x: 2, y:2  })
@@ -262,11 +301,6 @@ describe("POST /crops", () => {
     .send({ farmID: farmIDs[0], berryType: "cheri", y:2  })
     .set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(400);
-    /** Duplicate crop coordinates */
-    // resp = await request(app).post("/crops")
-    // .send({ farmID: farmIDs[0], berryType: "cheri", y:0, x:0  })
-    // .set("authorization", usr1Token);
-    // expect(resp.statusCode).toEqual(400);
     /** Non-existant berry type */
     resp = await request(app).post("/crops")
     .send({ farmID: farmIDs[0], berryType: "idontexist", x:0, y:2  })
@@ -280,6 +314,11 @@ describe("POST /crops", () => {
     /** Non-numeric farm ID */
     resp = await request(app).post("/crops")
     .send({ farmID: "my farm", berryType: "cheri", x:0, y:2  })
+    .set("authorization", usr1Token);
+    expect(resp.statusCode).toEqual(400);
+    /** Duplicate crop coordinates */
+    resp = await request(app).post("/crops")
+    .send({ farmID: farmIDs[0], berryType: "cheri", y:0, x:0  })
     .set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(400);
   });
@@ -310,8 +349,4 @@ describe("POST /crops", () => {
     .set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(404);
   });
-});
-
-describe("POST /farms/:farmID/water", () => {
-
 });
