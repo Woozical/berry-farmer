@@ -1,7 +1,7 @@
 "use strict";
 import app from "./app";
 import { PORT } from "./config";
-import initMarketPrices from "./utils/martketPrices";
+import initMarketPrices from "./utils/marketPrices";
 
 initMarketPrices()
 .then( res => {
@@ -12,4 +12,3 @@ initMarketPrices()
     console.log(`Express App started on http://localhost:${PORT}/`);
   });
 });
-

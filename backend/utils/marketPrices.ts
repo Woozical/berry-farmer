@@ -37,7 +37,7 @@ async function initMarketPrices(){
   const prices = new Map();
   for (let { name, pokePower, pokeType } of q.rows){
     const priceModifier = mods.hot.has(pokeType) ? 1.5 : mods.not.has(pokeType) ? 0.5 : 1;
-    const price = (Number(pokePower) * (0.7 + (Math.random() * 0.6))) * priceModifier;
+    const price = Number(((Number(pokePower) * (0.7 + (Math.random() * 0.6))) * priceModifier).toFixed(2));
     prices.set(name, price);
   }
   return { prices, mods };

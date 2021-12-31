@@ -6,7 +6,7 @@ import Farm from "../../models/farm";
 import Crop from "../../models/crop";
 import { createToken } from "../../utils/token";
 import app from "../../app";
-import initMarketPrices from "../../utils/martketPrices";
+import initMarketPrices from "../../utils/marketPrices";
 
 let locationID:number;
 let farmIDs:Array<number>;
