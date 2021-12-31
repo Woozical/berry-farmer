@@ -196,3 +196,120 @@ describe("purchase farm", () => {
     }
   });
 });
+
+describe("purchase berry", () => {
+  beforeAll( async () => {
+    await db.query("UPDATE users SET funds=9999 WHERE username = 'u1' ");
+  });
+
+  it("works - no such berry already in inventory", async () => {
+    await Market.purchaseBerry("u1", "pecha", 50, 5);
+    // changes reflect in db
+    let q = await db.query("SELECT funds FROM users WHERE username = 'u1' ");
+    expect(q.rows[0].funds).toEqual("9711.5");
+    q = await db.query("SELECT amount FROM user_inventories WHERE username = 'u1' AND berry_type = 'pecha' ");
+    expect(q.rows[0].amount).toEqual(5);
+  });
+
+  it("works - berry type already in inventory", async () => {
+    await Market.purchaseBerry("u1", "cheri", 50, 5);
+    // changes reflect in db
+    let q = await db.query("SELECT funds FROM users WHERE username = 'u1' ");
+    /** 15% Buy Markup, defined in method, check here if changed */
+    expect(q.rows[0].funds).toEqual("9711.5");
+    q = await db.query("SELECT amount FROM user_inventories WHERE username = 'u1' AND berry_type = 'cheri' ");
+    expect(q.rows[0].amount).toEqual(6);
+  });
+
+  it("throws BadRequestError if invalid username", async () => {
+    try{
+      await Market.purchaseBerry("idontexist", "pecha", 50, 5);
+      fail();
+    } catch(err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if negative berry amount", async () => {
+    try{
+      await Market.purchaseBerry("u1", "chesto", 50, -5);
+      fail();
+    } catch(err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if invalid berry type", async () => {
+    try{
+      await Market.purchaseBerry("u1", "idontexist", 50, 5);
+      fail();
+    } catch(err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if insufficient funds", async () => {
+    try{
+      await Market.purchaseBerry("u2", "pecha", 50, 5);
+      fail();
+    } catch(err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+});
+
+describe("sell berries", () => {
+  it("works", async () => {
+    await Market.sellBerry("u2", "chesto", 50, 2);
+    // changes reflect in db
+    let q = await db.query("SELECT funds FROM users WHERE username = 'u2' ");
+    expect(q.rows[0].funds).toEqual("100");
+    q = await db.query("SELECT amount FROM user_inventories WHERE username = 'u2' AND berry_type = 'chesto' ");
+    expect(q.rows[0].amount).toEqual(0);
+  });
+
+  it("throws BadRequestError if invalid username", async () => {
+    try{
+      await Market.sellBerry("idontexist", "pecha", 50, 5);
+      fail();
+    } catch(err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if negative berry amount", async () => {
+    try{
+      await Market.sellBerry("u1", "chesto", 50, -5);
+      fail();
+    } catch(err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if invalid berry type", async () => {
+    try{
+      await Market.sellBerry("u1", "idontexist", 50, 5);
+      fail();
+    } catch(err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if no berries of given type in inventory", async () => {
+    try{
+      await Market.sellBerry("u2", "pecha", 50, 5);
+      fail();
+    } catch(err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+
+  it("throws BadRequestError if less berries in inventory than in sell order", async () => {
+    try{
+      await Market.sellBerry("u3", "pecha", 50, 5);
+      fail();
+    } catch(err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  });
+});

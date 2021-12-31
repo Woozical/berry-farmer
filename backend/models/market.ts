@@ -110,4 +110,52 @@ export default class Market {
 
     return res;
   }
+
+  /** Performs a purchase order for given user, of given berry type and amount, with defined price per berry.
+   *  Berry price per unit is ephemeral and stored in server memory during runtime, so it's a parameter here rather than something
+   *  accessed in the DB. Adds the requested berries to user_inventories and deducts appropriate funds from user.
+   * 
+   *  Returns an object with success message and the cost of the operation.
+   *  Throws BadRequestError if invalid username or insufficient user funds for purchase
+   */
+  static async purchaseBerry(username:string, berryType:string, berryPrice:number, berryAmount:number){
+    const BUY_MARKUP = 1.15;
+    let user;
+    try {
+      user = await User.get(username);
+    } catch (err) {
+      if (err instanceof NotFoundError) throw new BadRequestError(`Invalid username ${username}`);
+      else throw err;
+    }
+    /** Berries are purchased at a markup of their market value */
+    const buyOrderPrice = Number((berryPrice * BUY_MARKUP * berryAmount).toFixed(2));
+    if (user.funds < buyOrderPrice) throw new BadRequestError(`${username} has insufficient funds for purchase. Required: ${buyOrderPrice}.`);
+    await User.addBerry(username, berryType, berryAmount);
+    await User.update(username, { funds: user.funds - buyOrderPrice });
+    return { message: `Bought ${berryAmount} ${berryType} for $${buyOrderPrice}`, buyOrderPrice };
+  }
+
+  /** Performs a purchase order for given user, of given berry type and amount, with defined price per berry.
+   *  Berry price per unit is ephemeral and stored in server memory during runtime, so it's a parameter here rather than something
+   *  accessed in the DB. Removes the requested berries from user_inventories and adds appropriate funds from user.
+   *  
+   *  Returns an object with success message and the funds gained from the operation.
+   *  Throws BadRequestError if invalid username or insufficient amount of berries for transaction in user inventory.
+   */
+  static async sellBerry(username:string, berryType:string, berryPrice:number, berryAmount:number){
+    let user;
+    try {
+      user = await User.get(username);
+    } catch (err) {
+      if (err instanceof NotFoundError) throw new BadRequestError(`Invalid username ${username}`);
+      else throw err;
+    }
+    const sellOrderPrice = Number((berryPrice * berryAmount).toFixed(2));
+    if (user.inventory[berryType] < berryAmount) throw new BadRequestError(
+      `Cannot sell ${berryAmount} ${berryType} berries. ${username} only has ${user.inventory[berryType]}`
+    );
+    await User.deductBerry(username, berryType, berryAmount * -1);
+    await User.update(username, { funds: user.funds + sellOrderPrice });
+    return { message: `Sold ${berryAmount} ${berryType} for $${sellOrderPrice}`, sellOrderPrice };
+  }
 }
