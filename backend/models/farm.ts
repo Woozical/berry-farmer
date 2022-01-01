@@ -116,7 +116,7 @@ export default class Farm{
                    owner, location AS "locationID", last_checked_at AS "lastCheckedAt"`,
         [owner, locationID, length, width, irrigationLVL]
       );
-      return { ...res.rows[0] };
+      return res.rows[0];
     } catch (err:any) {
       if (err.code && err.code === '23503'){
         const msg = err.constraint === 'farms_owner_fkey' ? `Invalid username ${owner}` : `Invalid location id ${locationID}`;
@@ -144,9 +144,7 @@ export default class Farm{
        [...values, farmID]
     );
     if (res.rowCount < 1) throw new NotFoundError(`No farm found with id ${farmID}`);
-    return {
-      ...res.rows[0],
-    }
+    return res.rows[0];
   }
 
   /** This method is responsible for querying database, cleaning and returning 

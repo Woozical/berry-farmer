@@ -18,8 +18,7 @@ function getDatabaseUri() {
 const BCRYPT_WORK_FACTOR = process.env.NODE_ENV === "test" ? 1 : 13;
 
 if (process.env.NODE_ENV !== "test"){
-  console.log("Jobly Config:");
-  console.log("SECRET_KEY:", SECRET_KEY);
+  console.log("Berry Farmer Config:");
   console.log("PORT:", PORT);
   console.log("BCRYPT_WORK_FACTOR:", BCRYPT_WORK_FACTOR);
   console.log("Database:", getDatabaseUri());
