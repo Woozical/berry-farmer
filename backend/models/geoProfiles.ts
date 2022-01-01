@@ -35,7 +35,9 @@ export default class GeoProfile {
     return q.rows[0].id;
   }
 
-  /** Get all */
+  /** Get all geo_profiles (with pagination), number of records per page is defined as a static 
+   *  field of this class, but can be overriden as the 2nd method parameter.
+   */
   static async getAll(page=0, limit=GeoProfile.PAGE_LIMIT){
     const res = await db.query(
       `SELECT id, name, region, country
@@ -47,8 +49,12 @@ export default class GeoProfile {
     return res.rows;
   }
 
-  /** Filter */
-  static async filter(searchParams:GeoProfileSearchParams){
+  /** Get all geo_profiles that match the given search parameters (with pagination)
+   *  Search params is an object with one or more of the following fields: { name, region, country }
+   *  The SQL WHERE clause is structured using ILIKEs, "filterDefinitions" static field on this class, 
+   *  as well as documentation for sqlForFilter() function in utils/sql.ts for more info.
+   */
+  static async filter(searchParams:GeoProfileSearchParams, page=0, limit=GeoProfile.PAGE_LIMIT){
     // Define filters based on given params
     const filters:Array<SQLFilter> = [];
     for (let [key, value] of Object.entries(searchParams)){
@@ -66,19 +72,30 @@ export default class GeoProfile {
        FROM geo_profiles
        WHERE ${whereString}
        ORDER BY name, region, country
-       `, whereValues
+       OFFSET $${whereValues.length+1}
+       LIMIT $${whereValues.length+2}
+       `, [...whereValues, (page * limit), limit]
     );
     return res.rows;
   }
 
-  /** Get by ID */
+  /** Get and returns a geo_profile by ID
+   *  Returns { id, name, region, country }
+   *  Throws NotFoundError if no geo_profile with that ID
+   */
   static async get(locationID:number){
     const res = await db.query('SELECT id, name, region, country FROM geo_profiles WHERE id = $1', [locationID]);
     if (res.rowCount < 1) throw new NotFoundError(`No geo profile found with ID of ${locationID}`);
     return res.rows[0];
   }
 
-  /** Patch */
+  /** Update the geo_profile with the given id in the database with the provided data.
+   *  Data is an object can include { name, region, country, tzOffset }
+   *  Throws NotFoundError if no geo_profile with that ID
+   * 
+   *  WARNING: geo_profiles are created using data pulled from the WeatherAPI, and are used for
+   *  further communication with that API. Editing these fields in DB may have unintended consequences.
+   */
   static async update(locationID:number, data:GeoProfileUpdateProps){
     const { values, setCols } = sqlForPartialUpdate(data, {"tzOffset" : "tz_offset"});
     const res = await db.query(
@@ -91,11 +108,23 @@ export default class GeoProfile {
     return res.rows[0];
   }
 
-  /** Delete */
+  /** Deletes record from database of geo_profile with given ID.
+   *  Be advised that the geo_profile must not be referenced by an farms
+   *  in the database, or the deletion will not be permitted due to Null Foreign Key violations
+   *  A BadRequestError will be thrown in this instance.
+   *  Throws NotFoundError if no such geo_profile with ID
+   */
   static async delete(locationID:number){
-    const res = await db.query("DELETE FROM geo_profiles WHERE id = $1 RETURNING id", [locationID]);
-    if (res.rowCount < 1) throw new NotFoundError(`No geo profile found with ID of ${locationID}`);
-    return { deleted: res.rows[0].id };
+    try {
+      const res = await db.query("DELETE FROM geo_profiles WHERE id = $1 RETURNING id", [locationID]);
+      if (res.rowCount < 1) throw new NotFoundError(`No geo profile found with ID of ${locationID}`);
+      return { deleted: res.rows[0].id };
+    } catch (err:any) {
+      if (err.constraint && err.constraint === 'farms_location_fkey'){
+        throw new BadRequestError("This location is still referenced by one or more farms.");
+      }
+      throw err;
+    }
   }
 
   /** Given a valid WeatherAPI search term (e.g. postal code, city name, etc.), queries the WeatherAPI

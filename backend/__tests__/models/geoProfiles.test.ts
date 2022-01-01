@@ -228,6 +228,11 @@ describe("filter method", () => {
     ]);
     res = await GeoProfile.filter({ region: "la-la-land", country: "4" });
     expect(res).toEqual([]);
+    // with paging
+    res = await GeoProfile.filter({ name: "a" }, 1, 1);
+    expect(res).toEqual([
+      { id: expect.any(Number), name: "a1", region: "b1", country: "c1" }
+    ]);
   });
 
   it("throws BadRequestError on bad params", async () => {
@@ -318,6 +323,17 @@ describe("delete method", () => {
       expect(err).toBeInstanceOf(NotFoundError);
     }
   });
+
+  it("throws BadRequestError if farms exist on this location", async () => {
+    await db.query(`INSERT INTO users (username, email, password) VALUES ('u1', 'u1@mail.com', 'password')`)
+    await db.query(`INSERT INTO farms (owner, location) VALUES ('u1', $1)`, [locationID]);
+    try {
+      await GeoProfile.delete(locationID);
+      fail();
+    } catch (err) {
+      expect(err).toBeInstanceOf(BadRequestError);
+    }
+  })
 });
 
 describe("getAll method", () => {

@@ -2,6 +2,7 @@ import axios from "axios";
 import { WEATHER_API_KEY, API_URL } from "../config";
 import { asyncReattempt, dateToHString } from "./helpers";
 import type HistoryAPIResponse from "../schemas/HistoryAPIResponse";
+import { BadRequestError, ForbiddenError, NotFoundError, UnauthorizedError } from "../expressError";
 
 interface SummaryObject {
   avgCloud: number
@@ -36,6 +37,30 @@ export default class WeatherAPI {
           return axios.get(endpoint, { params });
         }, 3);
         return res.data;
+      }
+      // On other axios errors, wrap in a better user-facing express error
+      else if (err.response){
+        switch (err.response.code){
+          case 400:
+            throw new BadRequestError(
+              `WeatherAPI responded with 400 BadRequest Error, check your search term '${location}' or contact an administrator about this issue.`
+            );
+          case 401:
+            throw new UnauthorizedError("WeatherAPI responded with 401 Unauthorized Error, please contact an administrator about this issue.");
+          case 403:
+            throw new ForbiddenError("WeatherAPI responded with 403 Forbidden Error, please contact an administrator about this issue.");
+          case 404:
+            throw new NotFoundError(
+              `WeatherAPI responded with 404 Not Found Error, check your search term '${location}' or contact an administrator about this issue.`
+            );
+          default:
+            console.log(`${new Date()} UNCAUGHT API ERROR:`, err);
+            throw new Error("WeatherAPI responded with an uncaught error.")
+        }
+      }
+      // If error came from async re-attempt timeout, wrap in better user-facing error
+      else if (err.message.includes("Exceded maximum reattempts on asynchronous operation")){
+        throw new Error("Could not connect with WeatherAPI after multiple re-attempts");
       }
       // Throw original error otherwise
       throw err;

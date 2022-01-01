@@ -1,6 +1,7 @@
 import WeatherAPI from "../../utils/weatherAPI";
 import axios from "axios";
 import historyAPIRes from "../resources/weather-history-response.json";
+import { NotFoundError } from "../../expressError";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -56,14 +57,14 @@ describe("getWeatherOn", () => {
     }
   });
   
-  test("should not make reattempt on non-server/connection error", async () => {
+  test("should not make reattempt on non-server/connection error, and preserve API response code", async () => {
     const axiosRes = { response: {message: "not found",  code: 404 }}
     mockedAxios.get.mockRejectedValue(axiosRes);
     try {
       await WeatherAPI.getWeatherOn("London", "2020-02-20");
       fail();
-    } catch (err:any){
-      expect(err.response).toBeTruthy();
+    } catch (err){
+      expect(err).toBeInstanceOf(NotFoundError);
       expect(mockedAxios.get).toBeCalledTimes(1);
     }
   });

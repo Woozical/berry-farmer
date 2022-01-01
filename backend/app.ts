@@ -7,6 +7,7 @@ import userRoutes from "./routes/users";
 import farmRoutes from "./routes/farms";
 import berryRoutes from "./routes/berries";
 import cropRoutes from "./routes/crops";
+import locationRoutes from "./routes/locations";
 
 const app: express.Application = express();
 
@@ -16,6 +17,7 @@ app.use("/users", userRoutes);
 app.use("/farms", farmRoutes);
 app.use("/berries", berryRoutes);
 app.use("/crops", cropRoutes);
+app.use("/locations", locationRoutes);
 app.get('/', (req, res) => {
   res.json({ message: "You have reached the BerryFarmer API." });
 });
