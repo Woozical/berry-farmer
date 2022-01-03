@@ -1,3 +1,22 @@
+FRONT END
+
+Farm view: 15x15 grid, centered is original 3x3 farm plot, up to 9x9 farm plot, bordered on all sides by 2x2 grassland
+
+<FarmGrid>
+	<Tile>
+		<Plant? />
+	</Tile>
+</FarmGrid>
+
+Inventory
+market
+farm status
+buy new farm
+account
+
+
+
+
 (models)
 To do: berry buy & sell, daily market prices
 
