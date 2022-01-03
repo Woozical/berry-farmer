@@ -1,0 +1,28 @@
+{
+  "username" : {
+    "maxLength" : 30,
+    "type" : "string",
+    "required" : true
+  },
+  "email" : {
+    "maxLength" : 60,
+    "minLength" : 6,
+    "type" : "string",
+    "format" : "email",
+    "required" : true
+  },
+  "password" : {
+    "maxLength" : 20,
+    "minLength" : 5,
+    "required" : true,
+    "type" : "string",
+    "match" : "confirmPassword"
+  },
+  "confirmPassword" : {
+    "maxLength" : 20,
+    "minLength" : 5,
+    "required" : true,
+    "type" : "string",
+    "match" : "password"
+  }
+}
