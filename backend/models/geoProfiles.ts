@@ -157,7 +157,7 @@ export default class GeoProfile {
       return { id, name: tableData.name, region: tableData.region, country: tableData.country }
     } catch (err:any) {
       if (err.constraint && err.constraint === 'uc_geo_profiles_name_region_country'){
-        throw new BadRequestError(`Location (${tableData.name}, ${tableData.region}, ${tableData.country}) already exists`);
+        throw new BadRequestError(`Location (${tableData.name}|${tableData.region}|${tableData.country}) already exists`);
       }
       throw err;
     }
