@@ -14,6 +14,10 @@ interface UpgradeFarmPayload {
   type: "length" | "width" | "irrigation"
 }
 
+interface LocationParams {
+  id?: number, name?: string, region?: string, country?: string, page?: number
+}
+
 // class SimpleHTTPError extends Error {
 //   status: number
 //   constructor(message:string, status:number){
@@ -110,5 +114,38 @@ export default class BerryFarmerAPI {
   static async buyFarm(locationID:number){
     const res = await this.request("farms/buy", "POST", { locationID });
     return res.data.farm;
+  }
+
+  /** GET location
+   *  Returns a single location object if ID is supplied,
+   *  otherwise, returns an array of location objects matching the given parameters
+   */
+  static async getLocations(params:LocationParams){
+    if (params.id){
+      const res = await this.request(`locations/${params.id}`);
+      return res.data.location;
+    }
+    const res = await this.request("locations", "GET", params);
+    return res.data.locations;
+  }
+
+  /** POST location/create */
+  static async createLocation(search:string){
+    try {
+      // Send request to find a location from WeatherAPI and create it in BerryFarmerAPI using our search term
+      const res = await this.request("locations", "POST", { search });
+      return res.data.location;
+    } catch (err:any) {
+      if (err.response && err.response.data.err.status === 400 && err.message.includes("already exists")){
+        // Bad request and location already exists, grab existing location from error message
+        const [name, region, country] = err.message.split("(")[1].split(")")[0].split("|");
+        // Look up locaton object from API
+        const [ location ] = await this.getLocations({ name, region, country });
+        // Return a match if we got it
+        if (location) return location;
+      }
+      // Throw original error if we reach here
+      throw err;
+    }
   }
 }
