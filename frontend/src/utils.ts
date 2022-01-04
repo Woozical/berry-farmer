@@ -11,6 +11,10 @@ export function addCommas(num:number) {
   return strDec ? subStrings.reverse().join(',') + '.' + strDec : subStrings.reverse().join(',');
 }
 
+export function titleCase(string:string){
+  return string[0].toUpperCase() + string.slice(1)
+}
+
 export function validateFormData(formData:any, schema:any){
   const validateRequired = (input:any) => (input !== null && input !== undefined && input !== "");
   const validateMinLength = (input:string, min:number) => (input.length >= min);

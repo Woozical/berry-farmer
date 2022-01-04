@@ -1,0 +1,10 @@
+.FarmTile div {
+  position: relative;
+  bottom: 8px;
+  cursor: pointer;
+}
+
+.FarmTile {
+  max-width: 32px;
+  max-height: 32px;
+}
