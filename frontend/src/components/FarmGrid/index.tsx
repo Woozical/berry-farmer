@@ -1,4 +1,5 @@
 import FarmTile from "../FarmTile";
+import GrassTile from "../GrassTile";
 
 interface CropObject{
   berryType: string, moisture: number, curGrowthStage: number
@@ -23,57 +24,86 @@ export default function FarmGrid(props:FarmGridProps){
     for (let j = 0; j < TOTAL_GRIDSIZE; j++){
       // Within farm coordinates
       if ((j >= farmStartX && j < farmEndX) && (i >= farmStartY && i < farmEndY)){
-        matrix[i][j] = "X";
+        matrix[i][j] = "f";
       // Outside farm coordnates
       } else {
         // Left border
         if (j+1 === farmStartX && i+1 >= farmStartY && i <= farmEndY){
           // top left corner?
-          if(i+1 === farmStartY) matrix[i][j] = "B-TL";
+          if(i+1 === farmStartY) matrix[i][j] = "tl";
           // bottom right corner?
-          else if (i === farmEndY) matrix[i][j] = "B-BL";
-          else matrix[i][j] = "B-L";
+          else if (i === farmEndY) matrix[i][j] = "bl";
+          else matrix[i][j] = "l";
         }
         // Right border
         else if (j === farmEndX && i +1 > farmStartY && i <= farmEndY){
           // bottom right corner?
-          if (i === farmEndY) matrix[i][j] = "B-BR";
-          else matrix[i][j] = "B-R";
+          if (i === farmEndY) matrix[i][j] = "br";
+          else matrix[i][j] = "r";
         }
         // Top border
         else if (i+1 === farmStartY && j+1 > farmStartX && j <= farmEndX){
           // top right corner ?
-          if (j === farmEndX) matrix[i][j] = "B-TR";
-          else matrix[i][j] = "B-T";
+          if (j === farmEndX) matrix[i][j] = "tr";
+          else matrix[i][j] = "t";
         }
         // Bottom border
-        else if (i === farmEndY && j+1 > farmStartX && j < farmEndX) matrix[i][j] = "B-B";
-        else matrix[i][j] = "G";
+        else if (i === farmEndY && j+1 > farmStartX && j < farmEndX) matrix[i][j] = "b";
+        else matrix[i][j] = "g";
       }
     }
   }
 
-  console.log(matrix);
+  const componentMatrix = matrix.map( row => {
+    return (<tr>
+      {row.map( cell => {
+        if (cell === "f") return <FarmTile />
+        else if (cell === "g") return <GrassTile withClutter={Math.random() < 0.1} />
+        else return <GrassTile border={cell} />
+      })}
+    </tr>)
+  })
 
   return (
     <div>
       <table>
         <tbody>
+          {componentMatrix}
+          {/* <tr>
+            <GrassTile border="tl" />
+            <GrassTile border="t" />
+            <GrassTile border="t" />
+            <GrassTile border="t" />
+            <GrassTile border="tr" />
+          </tr>
           <tr>
+            <GrassTile border="l" />
             <FarmTile />
             <FarmTile crop={ { berryType: "cheri", moisture: 20 }} />
             <FarmTile />
+            <GrassTile border="r" />
           </tr>
           <tr>
+            <GrassTile border="l" />
             <FarmTile crop={ { berryType: "cheri", moisture: 20 }} />
             <FarmTile crop={ { berryType: "cheri", moisture: 80 }} />
             <FarmTile crop={ { berryType: "cheri", moisture: 100 }} />
+            <GrassTile border="r" />
           </tr>
           <tr>
+            <GrassTile border="l" />
             <FarmTile crop={ { berryType: "cheri", moisture: 20 }} />
             <FarmTile crop={ { berryType: "cheri", moisture: 40 }} />
             <FarmTile crop={ { berryType: "cheri", moisture: 60 }} />
+            <GrassTile border="r" />
           </tr>
+          <tr>
+            <GrassTile border="bl" />
+            <GrassTile border="b" />
+            <GrassTile border="b" />
+            <GrassTile border="b" />
+            <GrassTile border="br" />
+          </tr> */}
         </tbody>
       </table>
     </div>
