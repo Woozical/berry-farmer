@@ -167,6 +167,12 @@ describe("POST /farms/buy", () => {
     expect(resp.statusCode).toEqual(400);
   });
 
+  it("responds 400 if bad location ID", async () => {
+    const resp = await request(app).post("/farms/buy")
+    .send({ locationID: 0 }).set("authorization", usr1Token);
+    expect(resp.statusCode).toEqual(400);
+  })
+
   it("responds 400 if invalid payload", async () => {
     const resp = await request(app).post("/farms/buy").send({ location: 1 }).set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(400);
