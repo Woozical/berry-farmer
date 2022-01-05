@@ -2,11 +2,11 @@ import axios from "axios";
 import type { Method } from "axios";
 const BASE_URL = process.env.REACT_APP_BASE_URL || "http://localhost:3001";
 
-interface RegisterPayload {
+export interface RegisterPayload {
   username: string, password: string, email: string
 }
 
-interface LoginPayload {
+export interface LoginPayload {
   username: string, password: string
 }
 

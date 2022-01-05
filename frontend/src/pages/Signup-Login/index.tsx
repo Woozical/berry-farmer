@@ -1,11 +1,13 @@
 import { useContext, useState } from "react";
-import { Nav, NavItem, NavLink, TabContent, TabPane } from "reactstrap";
+import GlobalContext from "../../GlobalContext";
+import { Nav, NavItem, NavLink } from "reactstrap";
 import SignupForm from "../../components/SignupForm";
 import LoginForm from "../../components/LoginForm";
 import "./style.css";
 
 export default function SignupLoginPage(){
   const [showLogin, setShowLogin] = useState(true);
+  const { login, signup } = useContext(GlobalContext);
 
   const mockCallback = () => {
     return [true, "success"];
@@ -34,7 +36,7 @@ export default function SignupLoginPage(){
         </NavItem>
       </Nav>
       <div className="mb-1"></div>
-      { showLogin ? <LoginForm submitCallback={mockCallback} /> : <SignupForm submitCallback={mockCallback} />}
+      { showLogin ? <LoginForm submitCallback={login} /> : <SignupForm submitCallback={signup} />}
     </div>
   </main>)
 }
