@@ -18,6 +18,10 @@ interface LocationParams {
   id?: number, name?: string, region?: string, country?: string, page?: number
 }
 
+interface CropPOSTPayload {
+  x: number, y: number, farmID: number, berryType: string
+}
+
 // class SimpleHTTPError extends Error {
 //   status: number
 //   constructor(message:string, status:number){
@@ -48,6 +52,7 @@ export default class BerryFarmerAPI {
   }
 
   // API routes
+  /************************************************************** AUTH */
 
   /** POSTs to /auth/register with given data to create a new user account
    *  and returns an auth token that corresponds wth that user.
@@ -63,6 +68,8 @@ export default class BerryFarmerAPI {
     return res.data.token;
   }
 
+  /************************************************************** USERS */
+
   /** DELETE request to /users/:username to remove user with given username from DB.
    *  Auth token must be for said user, or an admin, for this operation to be permitted.
    */
@@ -76,6 +83,14 @@ export default class BerryFarmerAPI {
     const res = await this.request(`users/${username}`);
     return res.data.user;
   }
+
+  /** GET farms owned by */
+  static async getUsersFarms(username:string){
+    const res = await this.request(`users/${username}/farms`);
+    return res.data.farms;
+  }
+
+  /************************************************************** FARMS */
 
   /** GET farm info */
   static async getFarm(farmID:number){
@@ -98,12 +113,6 @@ export default class BerryFarmerAPI {
     return res.data.farm;
   }
 
-  /** GET farms owned by */
-  static async getFarmsOwnedBy(username:string){
-    const res = await this.request(`users/${username}/farms`);
-    return res.data.farms;
-  }
-
   /** DELETE farm */
   static async deleteFarm(farmID:number){
     const res = await this.request(`farms/${farmID}`, "DELETE");
@@ -115,6 +124,57 @@ export default class BerryFarmerAPI {
     const res = await this.request("farms/buy", "POST", { locationID });
     return res.data.farm;
   }
+
+  /************************************************************** CROPS */
+
+  static async plantCrop(data:CropPOSTPayload){
+    const res = await this.request("crops", "POST", data);
+    return res.data.crop;
+  }
+
+  static async harvestCrop(cropID:number){
+    const res = await this.request(`crops/${cropID}/harvest`, "POST");
+    return res.data.harvest;
+  }
+
+  // To do: pass a crop object instead, for access to farm id
+  static async waterCrop(cropID:number, amount:Number){
+    const res = await this.request(`crops/${cropID}`, "PATCH", { moisture: amount });
+    if (res.status === 211){
+      // await this.request(`/farms/${farmID}/sync`, "POST");
+      throw new Error("Farm requires sync");
+    }
+    return res.data.crop;
+  }
+
+  static async deleteCrop(cropID:number){
+    const res = await this.request(`crops/${cropID}`, "DELETE");
+    return res.data;
+  }
+
+  static async getCrop(cropID:number){
+    const res = await this.request(`crops/${cropID}`);
+    return res.data.crop;
+  }
+
+  /************************************************************** BERRIES */
+
+  static async getBerryPrices(){
+    const res = await this.request("berries/prices");
+    return { prices: res.data.prices, hot: res.data.hot, not: res.data.not };
+  }
+
+  static async getBerryProfile(berryType:string){
+    const res = await this.request(`berries/${berryType}`);
+    return res.data.berry;
+  }
+
+  static async berryTransaction(transaction:"buy"|"sell", berryType:string, amount: number){
+    const res = await this.request(`berries/${transaction}`, "POST", { berryType, amount });
+    return res.data;
+  }
+
+  /************************************************************** LOCATIONS */
 
   /** GET location
    *  Returns a single location object if ID is supplied,
