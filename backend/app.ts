@@ -8,9 +8,11 @@ import farmRoutes from "./routes/farms";
 import berryRoutes from "./routes/berries";
 import cropRoutes from "./routes/crops";
 import locationRoutes from "./routes/locations";
+import cors from "cors";
 
 const app: express.Application = express();
 
+app.use(cors());
 app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
