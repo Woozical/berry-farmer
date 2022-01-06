@@ -4,7 +4,7 @@ import type { CropObject } from "../../BerryFarmerAPI";
 
 interface FarmGridProps {
   length: number, width: number, cropMatrix: Array<Array<CropObject>>,
-  clutterChance: number
+  clutterChance: number, clickCallback?: Function
 }
 
 export default function FarmGrid(props:FarmGridProps){
@@ -17,7 +17,6 @@ export default function FarmGrid(props:FarmGridProps){
   const farmStartY = Math.floor(0.5 * (TOTAL_GRIDSIZE-1)) - Math.floor(0.5 * props.length);
   const farmEndX = farmStartX + props.width;
   const farmEndY = farmStartY + props.length;
-
   // Iterate through our matrix, assigning components for each row
   for (let i = 0; i < TOTAL_GRIDSIZE; i++){
     for (let j = 0; j < TOTAL_GRIDSIZE; j++){
@@ -28,7 +27,7 @@ export default function FarmGrid(props:FarmGridProps){
         const localY = i - farmStartY;
         const crop = props.cropMatrix[localY][localX] || undefined;
         if (crop) key = `crop-${crop.id}`;
-        matrix[i][j] = <FarmTile key={key} crop={crop} />
+        matrix[i][j] = <FarmTile key={key} coordX={localX} coordY={localY} crop={crop} />
       }
       // Outside farm coordnates
       else {
@@ -60,13 +59,11 @@ export default function FarmGrid(props:FarmGridProps){
   }
 
   return (
-    <div>
-      <table>
-        <tbody>
-          {matrix.map( (row, idx) => { return <tr key={`row-${idx}`}>{row}</tr> } )}
-        </tbody>
-      </table>
-    </div>
+    <table>
+      <tbody>
+        {matrix.map( (row, idx) => { return <tr key={`row-${idx}`}>{row}</tr> } )}
+      </tbody>
+    </table>
   )
 }
 

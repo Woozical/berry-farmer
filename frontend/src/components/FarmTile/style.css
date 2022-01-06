@@ -8,3 +8,7 @@
   max-width: 32px;
   max-height: 32px;
 }
+
+.FarmTile .active {
+  outline: 6px solid yellow;
+}

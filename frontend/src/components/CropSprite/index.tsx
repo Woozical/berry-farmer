@@ -1,8 +1,8 @@
 import { titleCase } from "../../utils";
 interface CropSpriteProps {
-  berryType: string, curGrowthStage: number
+  berryType: string, curGrowthStage: number, x?:number, y?: number
 }
-export default function CropSprite({ berryType, curGrowthStage }:CropSpriteProps){
+export default function CropSprite({ berryType, curGrowthStage, x, y }:CropSpriteProps){
   let filePath:string;
   const fpb = titleCase(berryType);
   switch (curGrowthStage){
@@ -31,5 +31,5 @@ export default function CropSprite({ berryType, curGrowthStage }:CropSpriteProps
     background: `url(${filePath}) no-repeat center`,
   }
 
-  return <div style={style}></div>
+  return <div data-x={x || 0} data-y={y || 0} style={style}></div>
 }
