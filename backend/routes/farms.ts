@@ -51,7 +51,7 @@ router.route('/:farmID')
       const farmID = Number(req.params.farmID);
       const farm = await Farm.get(farmID);
       /** If 10 minutes have passed since last crop sync, resource must be updated before being accessed */
-      if (Date.now() - farm.lastCheckedAt.getTime() > FARM_SYNC_TIMER){
+      if (farm.crops.length > 0 && Date.now() - farm.lastCheckedAt.getTime() > FARM_SYNC_TIMER){
         return res.status(211).json({ message: `needs crop sync. send POST request to /farms/${farmID}/sync` });
       }
       return res.json({ message: "ok", farm });

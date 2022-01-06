@@ -161,7 +161,7 @@ export default class Farm{
         JOIN farms ON farms.id = crops.farm_id
         WHERE farms.id = $1`, [farmID]
     );
-    if (cropRes.rowCount < 1) throw new NotFoundError(`No farm found with id ${farmID}`);
+    if (cropRes.rowCount < 1) throw new NotFoundError(`No crop records found for farm id ${farmID}`);
     // Clean query responses
     let earliest = new Date(Date.now() + 86400000);
     const crops = cropRes.rows.map( ({id, health, curGrowthStage, moisture, plantedAt, growthTime, dryRate, idealTemp, idealCloud}) => {
