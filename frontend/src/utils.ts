@@ -15,6 +15,16 @@ export function titleCase(string:string){
   return string[0].toUpperCase() + string.slice(1)
 }
 
+// Converts an array of crop objects, which each contain propertes X and Y, into a matrix of
+// crop objects where the matrix coords match the crop X and Y properties
+export function cropArrToMatrix(cropArr:Array<any>, length:number, width:number){
+  const matrix = Array.from(Array(length), () => Array.from(Array(width)));
+  for (let crop of cropArr){
+    matrix[crop.y][crop.x] = crop;
+  }
+  return matrix;
+}
+
 export function validateFormData(formData:any, schema:any){
   const validateRequired = (input:any) => (input !== null && input !== undefined && input !== "");
   const validateMinLength = (input:string, min:number) => (input.length >= min);

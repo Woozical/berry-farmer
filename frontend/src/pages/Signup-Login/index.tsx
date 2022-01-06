@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import { useAuthenticated } from "../../hooks";
 import GlobalContext from "../../GlobalContext";
 import { Nav, NavItem, NavLink } from "reactstrap";
 import SignupForm from "../../components/SignupForm";
@@ -8,10 +9,8 @@ import "./style.css";
 export default function SignupLoginPage(){
   const [showLogin, setShowLogin] = useState(true);
   const { login, signup } = useContext(GlobalContext);
-
-  const mockCallback = () => {
-    return [true, "success"];
-  }
+  const [auth, redirect] = useAuthenticated("/");
+  if (auth) return redirect;
 
   return (
   <main className="pt-5 pb-5 text-start">
