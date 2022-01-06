@@ -349,6 +349,13 @@ describe("POST /farms/:farmID/sync", () => {
     const resp = await request(app).post(endpoint).set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(404);
   });
+
+  it("responds 404 if no crops to sync", async () => {
+    const farm = await Farm.create({owner: "usr3", locationID});
+    const endpoint = `/farms/${farm.id}/sync`;
+    const resp = await request(app).post(endpoint).set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(404);
+  });
 });
 
 describe("PATCH /farms/:farmID", () => {
