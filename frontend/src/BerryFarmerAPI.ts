@@ -16,6 +16,12 @@ export interface FarmObject {
   owner: string, width: number, crops: Array<any>
 }
 
+export interface FarmObjectSummary {
+  id: number, length: number, width: number, lastCheckedAt: string,
+  irrigationLVL: number, locationName: string, locationRegion: string,
+  locationCountry: string
+}
+
 export interface BerryProfileObject {
   type: string, growthTime: number, maxHarvest: number, size: number, pokeType: string,
   dryRate: number, pokePower: number, idealCloud: number, idealTemp: number
@@ -29,6 +35,10 @@ export interface CropObject {
 export interface CropObjectDetailed {
   id: number, curGrowthStage: number, plantedAt: string, farmID: number,
   x: number, y: number, moisture: number, health: number, berry: BerryProfileObject
+}
+
+export interface LocationObject { 
+  id: number, name: string, region: string, country: string
 }
 
 interface UpgradeFarmPayload {
@@ -98,7 +108,7 @@ export default class BerryFarmerAPI {
   }
 
   /** GET farms owned by */
-  static async getUsersFarms(username:string){
+  static async getUsersFarms(username:string) : Promise<Array<FarmObjectSummary>>{
     const res = await this.request(`users/${username}/farms`);
     return res.data.farms;
   }
@@ -203,7 +213,7 @@ export default class BerryFarmerAPI {
   }
 
   /** POST location/create */
-  static async createLocation(search:string){
+  static async createLocation(search:string): Promise<LocationObject>{
     try {
       // Send request to find a location from WeatherAPI and create it in BerryFarmerAPI using our search term
       const res = await this.request("locations", "POST", { search });
