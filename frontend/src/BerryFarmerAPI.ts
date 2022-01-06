@@ -10,6 +10,27 @@ export interface LoginPayload {
   username: string, password: string
 }
 
+export interface FarmObject {
+  id: number, irrigationLVL: number, lastCheckedAt: string, length: number
+  locationCountry: string, locationName: string, locationRegion: string,
+  owner: string, width: number, crops: Array<any>
+}
+
+export interface BerryProfileObject {
+  type: string, growthTime: number, maxHarvest: number, size: number, pokeType: string,
+  dryRate: number, pokePower: number, idealCloud: number, idealTemp: number
+}
+
+export interface CropObject {
+  id: number, curGrowthStage: number, plantedAt: string, farmID: number,
+  x: number, y: number, moisture: number, health: number, berryType: string
+}
+
+export interface CropObjectDetailed {
+  id: number, curGrowthStage: number, plantedAt: string, farmID: number,
+  x: number, y: number, moisture: number, health: number, berry: BerryProfileObject
+}
+
 interface UpgradeFarmPayload {
   type: "length" | "width" | "irrigation"
 }
@@ -21,14 +42,6 @@ interface LocationParams {
 interface CropPOSTPayload {
   x: number, y: number, farmID: number, berryType: string
 }
-
-// class SimpleHTTPError extends Error {
-//   status: number
-//   constructor(message:string, status:number){
-//     super(message);
-//     this.status = status;
-//   }
-// }
 
 export default class BerryFarmerAPI {
   static token:string;
@@ -93,7 +106,7 @@ export default class BerryFarmerAPI {
   /************************************************************** FARMS */
 
   /** GET farm info */
-  static async getFarm(farmID:number){
+  static async getFarm(farmID:number):Promise<FarmObject>{
     let res = await this.request(`farms/${farmID}`);
     if (res.status === 211){
       res = await this.request(`farms/${farmID}/sync`, "POST");

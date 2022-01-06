@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import BerryFarmerAPI from './BerryFarmerAPI';
 import GlobalContext from './GlobalContext';
 import type { LoginPayload, RegisterPayload } from "./BerryFarmerAPI";
+import NavBar from './components/NavBar';
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -82,7 +83,16 @@ function App() {
       <div className="App">
         <div className="App-background bg-light"></div>
         <BrowserRouter>
-          {loading ? <LoadingSpinner withText /> : <PageRoutes />}
+        <div className="row">
+          <div className="col-1">
+          <NavBar />
+          </div>
+          <div className="col-11">
+            {loading ? <LoadingSpinner withText /> : <PageRoutes />}
+          </div>
+        </div>
+          {/* <NavBar />
+          {loading ? <LoadingSpinner withText /> : <PageRoutes />} */}
         </BrowserRouter>
       </div>
     </GlobalContext.Provider>

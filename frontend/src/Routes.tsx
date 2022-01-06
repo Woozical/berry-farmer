@@ -9,7 +9,7 @@ export default function PageRoutes () {
   return (
     <Routes>
       <Route path="/farm/create" element={ <CreateFarmPage />} />
-      <Route path="/farm/*" element={ <FarmPage />} />
+      <Route path="/farm/:farmID" element={ <FarmPage />} />
       <Route path="/signup" element={ <SignupLoginPage />} />
       <Route path="/login" element ={ <SignupLoginPage />} />
       <Route path="/" element = { <HomePage />} />
