@@ -1,12 +1,13 @@
 import spritesheet from "../../media/sprites/farm_ground_2x.png";
 import ClutterSprite from "../ClutterSprite";
+import { memo } from "react";
 
 interface GrassTileProps{
-  withClutter?: boolean,
+  clutterChance?: number,
   border?: "l" | "r" | "b" | "t" | "tl" | "tr" | "bl" | "br"
 }
 
-export default function GrassTile(props:GrassTileProps){
+export default memo(function GrassTile(props:GrassTileProps){
   let spriteOffsetX:number, spriteOffsetY:number;
   const borderOffsets = {
     l: [0, 2], r: [1, 2], b: [2, 2], t: [3, 2],
@@ -23,7 +24,7 @@ export default function GrassTile(props:GrassTileProps){
   }
   return (
     <td style={bgSprite}>
-      {props.withClutter && <ClutterSprite />}
+      {props.clutterChance && (Math.random() < props.clutterChance) && <ClutterSprite />}
     </td>
   )
-}
+});

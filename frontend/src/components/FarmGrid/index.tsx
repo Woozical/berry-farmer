@@ -1,22 +1,21 @@
 import FarmTile from "../FarmTile";
 import GrassTile from "../GrassTile";
-import type { CropObject } from "../../BerryFarmerAPI";
+import { useContext } from "react";
+import FarmContext from "../../FarmContext";
 
-interface FarmGridProps {
-  length: number, width: number, cropMatrix: Array<Array<CropObject>>,
-  clutterChance: number, clickCallback?: Function
-}
-
-export default function FarmGrid(props:FarmGridProps){
+function FarmGrid(){
+  const { state: { farm } } = useContext(FarmContext);
   const TOTAL_GRIDSIZE = 13;
-  const CLUTTER_CHANCE = props.clutterChance;
+  // Create empty component matrix
   const matrix = Array.from(Array(TOTAL_GRIDSIZE), () => Array.from(Array(TOTAL_GRIDSIZE)));
+  
   // Define the offsets, where our actual farm will begin on the grid (centered)
   // Everything else will be grass
-  const farmStartX = Math.floor(0.5 * (TOTAL_GRIDSIZE-1)) - Math.floor(0.5 * props.width);
-  const farmStartY = Math.floor(0.5 * (TOTAL_GRIDSIZE-1)) - Math.floor(0.5 * props.length);
-  const farmEndX = farmStartX + props.width;
-  const farmEndY = farmStartY + props.length;
+  const farmStartX = Math.floor(0.5 * (TOTAL_GRIDSIZE-1)) - Math.floor(0.5 * farm.width);
+  const farmStartY = Math.floor(0.5 * (TOTAL_GRIDSIZE-1)) - Math.floor(0.5 * farm.length);
+  const farmEndX = farmStartX + farm.width;
+  const farmEndY = farmStartY + farm.length;
+
   // Iterate through our matrix, assigning components for each row
   for (let i = 0; i < TOTAL_GRIDSIZE; i++){
     for (let j = 0; j < TOTAL_GRIDSIZE; j++){
@@ -25,7 +24,7 @@ export default function FarmGrid(props:FarmGridProps){
       if ((j >= farmStartX && j < farmEndX) && (i >= farmStartY && i < farmEndY)){
         const localX = j - farmStartX;
         const localY = i - farmStartY;
-        const crop = props.cropMatrix[localY][localX] || undefined;
+        const crop = farm.cropMatrix[localY][localX] || undefined;
         if (crop) key = `crop-${crop.id}`;
         matrix[i][j] = <FarmTile key={key} coordX={localX} coordY={localY} crop={crop} />
       }
@@ -53,7 +52,7 @@ export default function FarmGrid(props:FarmGridProps){
         }
         // Bottom border
         else if (i === farmEndY && j+1 > farmStartX && j < farmEndX) matrix[i][j] = <GrassTile key={key} border="b" />;
-        else matrix[i][j] = <GrassTile key={key} withClutter={Math.random() < CLUTTER_CHANCE} />;
+        else matrix[i][j] = <GrassTile key={key} clutterChance={0.1} />;
       }
     }
   }
@@ -70,6 +69,7 @@ export default function FarmGrid(props:FarmGridProps){
 FarmGrid.defaultProps = {
   length: 3,
   width: 3,
-  clutterChance: 0.05,
   cropMatrix: []
 }
+
+export default FarmGrid;

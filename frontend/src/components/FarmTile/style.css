@@ -9,6 +9,6 @@
   max-height: 32px;
 }
 
-.FarmTile .active {
-  outline: 6px solid yellow;
+.FarmTile.active {
+  outline: 3px solid rgba(255, 255, 0, 0.575);
 }
