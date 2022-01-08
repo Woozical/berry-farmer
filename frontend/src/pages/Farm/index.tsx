@@ -21,19 +21,28 @@ export default function FarmPage(){
   
   const reducer = (state:any, action:any) => {
     switch (action.type){
-      case "FARM_REPLACE" :
+      case "FARM_REPLACE": {
         state.farm = action.payload.farm;
-        return state;
-      case "FARM_FIELD" :
+        return {...state};
+      }
+      case "FARM_FIELD": {
         state.farm[action.payload.key] = action.payload.value;
-        return state;
-      case "CROP_UPDATE" :
+        return {...state};
+      }
+      case "CROP_UPDATE": {
         const {x, y} = action.payload;
         const updated = {...state.farm.cropMatrix[y][x], ...action.payload.crop };
         state.farm.cropMatrix[y][x] = updated;
-        return state;
-      case "ACTIVE_GRID" :
+        return {...state};
+      }
+      case "CROP_DELETE": {
+        const {x, y} = action.payload;
+        state.farm.cropMatrix[y][x] = null;
+        return {...state};
+      }
+      case "ACTIVE_GRID": {
         return {...state, activeGrid: {...action.payload.activeGrid }};
+      }
       default:
         return state;
     }

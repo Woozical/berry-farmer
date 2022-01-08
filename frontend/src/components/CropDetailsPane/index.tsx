@@ -7,7 +7,7 @@ import type { EventHandler } from "react";
 import { timeAgo } from "../../utils";
 
 interface CropDetailsPaneProps {
-  crop: CropObject
+  crop: CropObject, waterCallback: Function, harvestCallback: Function
 }
 
 export default function CropDetailPane(props:CropDetailsPaneProps){
@@ -17,9 +17,15 @@ export default function CropDetailPane(props:CropDetailsPaneProps){
   const waterCrop:EventHandler<any> = (evt) => {
     if (props.crop.curGrowthStage < 4 && evt.target.id.includes("btn-water")){
       const waterAmt = +evt.target.id.split('-')[2];
-      console.log("Watering +", waterAmt);
+      props.waterCallback(waterAmt);
     }
   };
+
+  const harvest:EventHandler<any> = () => {
+    if (props.crop.curGrowthStage === 4){
+      props.harvestCallback();
+    }
+  }
 
   return (
     <Card className="container">
@@ -87,7 +93,10 @@ export default function CropDetailPane(props:CropDetailsPaneProps){
         </div>
         <hr />
         <div className="row">
-          <button className="btn btn-success btn-lg" disabled={props.crop.curGrowthStage < 4}>Harvest</button>
+          <button
+            className="btn btn-success btn-lg"
+            disabled={props.crop.curGrowthStage < 4}
+            onClick={harvest}>Harvest</button>
         </div>
       </CardBody>
     </Card>

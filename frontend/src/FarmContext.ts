@@ -4,7 +4,7 @@ import type { CropObject } from "./BerryFarmerAPI";
 interface FarmData {
   id: number, length: number, width: number, irrigationLVL: number,
   lastCheckedAt: Date, locName: string, locRegion: string, locCountry: string,
-  cropMatrix: Array< Array<CropObject | undefined> >
+  cropMatrix: Array< Array<CropObject | undefined | null> >
 }
 
 interface ActiveGrid {
