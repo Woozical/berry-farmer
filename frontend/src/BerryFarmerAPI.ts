@@ -150,6 +150,7 @@ export default class BerryFarmerAPI {
 
   /************************************************************** CROPS */
 
+  // { x: number, y: number, farmID: number, berryType: string }
   static async plantCrop(data:CropPOSTPayload){
     const res = await this.request("crops", "POST", data);
     return res.data.crop;

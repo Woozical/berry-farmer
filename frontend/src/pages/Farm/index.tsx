@@ -10,6 +10,7 @@ import FarmInfoPanel from "../../components/FarmInfoPanel";
 import GlobalContext from "../../GlobalContext";
 import { Navigate } from "react-router-dom";
 import FarmContext from "../../FarmContext";
+import { Alert } from "reactstrap";
 
 // this is rendering twice for some reason
 export default function FarmPage(){
@@ -29,6 +30,11 @@ export default function FarmPage(){
         state.farm[action.payload.key] = action.payload.value;
         return {...state};
       }
+      case "CROP_REPLACE": {
+        const {x, y} = action.payload;
+        state.farm.cropMatrix[y][x] = action.payload.crop;
+        return {...state};
+      }
       case "CROP_UPDATE": {
         const {x, y} = action.payload;
         const updated = {...state.farm.cropMatrix[y][x], ...action.payload.crop };
@@ -46,12 +52,17 @@ export default function FarmPage(){
       default:
         return state;
     }
-  }
+  };
 
   const { farmID } = useParams();
   const [state, dispatch] = useReducer(reducer, DEFAULT_CONTEXT_STATE)
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState("");
   const apiError = useRef(null);
+
+  const notify = (msg: string) => {
+    setNotification(msg);
+  }
   
   /** Load in farm data */
   useEffect(() => {
@@ -75,6 +86,30 @@ export default function FarmPage(){
     } 
     loadFarm(Number(farmID));
   }, [farmID]);
+
+  /** Start 1 min timer for automatic sync calls (if we successfully pulled farm data from API) */
+  useEffect(() => {
+    async function syncFarm(farmID:number){
+      try {
+        const res = await BerryFarmerAPI.syncFarm(farmID);
+        const farm = {
+          id: res.id, length: res.length, width: res.width, irrigationLVL: res.irrigationLVL,
+          lastCheckedAt : new Date(res.lastCheckedAt), locName: res.locationName,
+          locRegion: res.locationRegion, locCountry: res.locationCountry,
+          cropMatrix: cropArrToMatrix(res.crops, res.length, res.width)
+        };
+        dispatch({ type: "FARM_REPLACE", payload: { farm }});
+      } catch (err) {
+        console.debug("Attempted auto-sync with no crops on farm.");
+      }
+    };
+    if (state.farm.id > 0){
+      const timerID = setInterval(() => {
+        syncFarm(state.farm.id);
+      }, 60000);
+      return () => { clearInterval(timerID); }
+    }
+  }, [state.farm.id]);
   
   // Handle error  if api error
   if (apiError.current){
@@ -102,7 +137,8 @@ export default function FarmPage(){
               <FarmGrid />
             </div>
             <div className="col-4">
-              <FarmInfoPanel />
+              <FarmInfoPanel notify={notify} />
+              {notification && <Alert color="primary" toggle={() => { setNotification("") }}>{notification}</Alert>}
             </div>
           </div>
           }

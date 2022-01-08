@@ -43,7 +43,7 @@ function App() {
     localStorage.setItem("berryFarmer-username", username);
     setCurrentUser(user);
     return user;
-  }
+  };
 
   /** Global functions that edit the currentUser */
   const signup = async ({username, password, email}:RegisterPayload) => {
@@ -56,7 +56,7 @@ function App() {
       console.error(err);
       return [false, err.message];
     }
-  }
+  };
 
   const login = async ({username, password}:LoginPayload) => {
     try {
@@ -68,7 +68,7 @@ function App() {
       console.error(err);
       return [false, err.message];
     }
-  }
+  };
 
   /** Wipes localStorage login info, API token, and currentUser */
   const logout = () => {
@@ -76,10 +76,21 @@ function App() {
     localStorage.setItem("berryFarmer-username", "");
     BerryFarmerAPI.token = "";
     setCurrentUser(null);
-  }
+  };
+
+  /** Updates the currentUser's inventory */
+  const modInventory = (berryType:string, amountAdjust:number) => {
+    if (currentUser === null) return;
+    //@ts-ignore
+    const oldAmt = currentUser.inventory[berryType] || 0;
+    //@ts-ignore
+    currentUser.inventory[berryType] = oldAmt + amountAdjust;
+    //@ts-ignore
+    setCurrentUser({...currentUser});
+  };
 
   return (
-    <GlobalContext.Provider value= { { currentUser, login, logout, signup } }>
+    <GlobalContext.Provider value= { { currentUser, login, logout, signup, modInventory } }>
       <div className="App">
         <div className="App-background bg-light"></div>
         <BrowserRouter>

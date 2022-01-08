@@ -7,10 +7,10 @@ import type { EventHandler } from "react";
 import { timeAgo } from "../../utils";
 
 interface CropDetailsPaneProps {
-  crop: CropObject, waterCallback: Function, harvestCallback: Function
+  crop: CropObject, waterCallback: Function, harvestCallback: Function, deleteCallback: Function
 }
 
-export default function CropDetailPane(props:CropDetailsPaneProps){
+export default function CropDetailsPane(props:CropDetailsPaneProps){
   const berryTitle = titleCase(props.crop.berryType);
   const iconPath = `/assets/berries/${berryTitle}/${berryTitle}-icon.png`;
 
@@ -25,6 +25,10 @@ export default function CropDetailPane(props:CropDetailsPaneProps){
     if (props.crop.curGrowthStage === 4){
       props.harvestCallback();
     }
+  };
+
+  const destroy:EventHandler<any> = () => {
+    props.deleteCallback();
   }
 
   return (
@@ -94,12 +98,19 @@ export default function CropDetailPane(props:CropDetailsPaneProps){
         <hr />
         <div className="row">
           <button
-            className="btn btn-success btn-lg"
+            className="col-4 btn btn-success btn-lg"
             disabled={props.crop.curGrowthStage < 4}
-            onClick={harvest}>Harvest</button>
+            onClick={harvest}>
+              Harvest
+          </button>
+          <button
+            className="col-4 offset-4 btn btn-danger btn-lg"
+            onClick={destroy}
+          >
+            Destroy
+          </button>
         </div>
       </CardBody>
     </Card>
-
   )
 }
