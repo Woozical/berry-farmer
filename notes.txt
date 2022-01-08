@@ -153,6 +153,14 @@ tempFactor = (100 / 70) - 1 = 0.42857...
 tempMod = cos(0.42857) * 6 - 4.8 = 0.6574  // (bonus for within 26% of ideal)
 cloudMod = cos(cloudFactor) * 3 - 1.85 // bonus for within 32% of ideal
 
+The above method of temp/cloud factors favors higher ideal temps / avgs. There's more leeway
+the more extreme the value. Whereas the closer the ideal is to 0 (and cannot divide by 0 to begin with),
+the more punishing the most minute of difference.
+
+Therefore, change the formula to use flat differences rather than ratios.
+For temperature, +/- 5 degrees of ideal temp yields bonus (max bonus when at exactly ideal temp, of course)
+For cloud, +/- 15% cloud level yields bonus (max bonus at exactly ideal cloud)
+
 moisture = flat health adjustment
 95 < moisture < 105 = +25 health
 90 < moisture < 95 || 105 < moisture < 110 = +20 health

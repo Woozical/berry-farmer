@@ -211,7 +211,7 @@ describe("Update method", () => {
   });
 });
 
-
+/** TO DO: Change seed weather data for less extreme conditions, more accurate test environment for sync operation */
 describe("Crop sync method", () => {
   /** Define constants */
   const hour = 3600000;
@@ -288,7 +288,7 @@ describe("Crop sync method", () => {
     const q = await db.query("SELECT * FROM crops WHERE farm_id = $1", [farmID]);
     for (let row of q.rows){
       expect(Number(row.moisture)).toBeCloseTo(56.66, 1);
-      expect(Number(row.health)).toBeCloseTo(95);
+      expect(Number(row.health)).toBeCloseTo(48.418);
       expect(row.cur_growth_stage).toEqual(1);
     }
   });
@@ -311,7 +311,7 @@ describe("Crop sync method", () => {
     const q = await db.query("SELECT * FROM crops WHERE farm_id = $1", [farmID]);
     for (let row of q.rows){
       expect(Number(row.moisture)).toBeCloseTo(24.166, 1);
-      expect(Number(row.health)).toBeCloseTo(60);
+      expect(Number(row.health)).toBeCloseTo(0);
       expect(row.cur_growth_stage).toEqual(2);
     }
   });
@@ -334,7 +334,7 @@ describe("Crop sync method", () => {
     const q = await db.query("SELECT * FROM crops WHERE farm_id = $1", [farmID]);
     for (let row of q.rows){
       expect(Number(row.moisture)).toBeCloseTo(57.966, 1);
-      expect(Number(row.health)).toBeCloseTo(95);
+      expect(Number(row.health)).toBeCloseTo(28.876);
       expect(row.cur_growth_stage).toEqual(2);
     }
   });
@@ -384,7 +384,7 @@ describe("Crop sync method", () => {
     const q = await db.query("SELECT * FROM crops WHERE farm_id = $1", [farmID]);
     for (let row of q.rows){
       expect(Number(row.moisture)).toBeCloseTo(78.33);
-      expect(Number(row.health)).toBeCloseTo(100);
+      expect(Number(row.health)).toBeCloseTo(58.418);
       expect(row.cur_growth_stage).toEqual(4)
     }
   });
