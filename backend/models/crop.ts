@@ -106,11 +106,11 @@ export default class Crop{
    *  moisture, and health at the point of growth.
    */
   static calcHealth({ health, moisture, idealTemp, idealCloud, avgTemp, avgCloud }:CropGrowthCalcProps){
-    // +/- 32% of ideal, 1.0x to 1.15x bonus
-    // Past +/- 32% of ideal, gradual decline from 1.0x to 0x modifier
-    const cloudMod = Math.max(0, (Math.cos((avgCloud / idealCloud) - 1) * 3 - 1.85)); 
-    // As above with +/- 26% range, up to 1.2x bonus
-    const tempMod = Math.max(0, (Math.cos(avgTemp / idealTemp - 1) * 6 - 4.8));
+    // +/- 15% of ideal cloud %, 1.0x to 1.15x bonus
+    // Past +/- 15% of ideal, gradual decline from 1.0x to 0x modifier
+    const cloudMod = Math.max(0, (Math.cos((idealCloud-avgCloud) * 0.01) * 13.3 - 12.15));
+    // As above with (roughly) +/-5 degree range, up to 1.2x bonus
+    const tempMod = Math.max(0, (Math.cos((idealTemp-avgTemp) * 0.01) * 150 - 148.80));
 
     // Starting at 95-105 moisture, +25 health adjustment
     // From there, every +/- 5 moisture, health adjustment is reduced by 5
