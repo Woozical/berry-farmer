@@ -1,6 +1,6 @@
 import FarmGrid from "../../components/FarmGrid";
 import { useParams } from "react-router-dom";
-import { useEffect, useState, useContext, useRef, useReducer } from "react";
+import { useEffect, useState, useRef, useReducer } from "react";
 import BerryFarmerAPI from "../../BerryFarmerAPI";
 import NotFound404 from "../../components/NotFound404";
 import Forbidden403 from "../../components/Forbidden403";
@@ -83,20 +83,21 @@ export default function FarmPage(){
 
   return (
     <FarmContext.Provider value = { { state, dispatch } }>
-      <main>
-        Farm View Page
-        {loading ?
-        <LoadingSpinner />
-        :
-        <div className="row">
-          <div className="col-9">
-            <FarmGrid />
+      <main className="pt-5 pb-5 text-start">
+        <div className="container">
+          {loading ?
+          <LoadingSpinner />
+          :
+          <div className="row">
+            <div className="col-8">
+              <FarmGrid />
+            </div>
+            <div className="col-4">
+              <FarmInfoPanel />
+            </div>
           </div>
-          <div className="col-3">
-            {/* <FarmInfoPanel /> */}
-          </div>
+          }
         </div>
-        }
       </main>
   </FarmContext.Provider>)
 }

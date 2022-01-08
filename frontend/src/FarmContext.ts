@@ -8,7 +8,7 @@ interface FarmData {
 }
 
 interface ActiveGrid {
-  id?: number, x: number, y: number
+  x: number, y: number
 }
 
 interface IFarmContext {

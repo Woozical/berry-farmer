@@ -15,6 +15,39 @@ export function titleCase(string:string){
   return string[0].toUpperCase() + string.slice(1)
 }
 
+// Returns, in string form, how many months/weeks/days/hours/minutes ago from now a certain date is.
+export function timeAgo(date:Date):string{
+  const monthMS = 2629800000;
+  const weekMS = 604800000;
+  const dayMS = 86400000;
+  const hourMS = 3600000;
+  const minuteMS = 60000;
+  const delta = Date.now() - date.getTime();
+  if (delta >= monthMS){
+    const num = delta/ monthMS;
+    return `${num.toFixed(0)} month${num >= 2 ? 's' : ''} ago`;
+  
+  } else if (delta >= weekMS){
+    const num = delta/ weekMS;
+    return `${num.toFixed(0)} week${num >= 2 ? 's' : ''} ago`;
+  
+  } else if (delta >= dayMS){
+    const num = delta/ dayMS;
+    return `${num.toFixed(0)} day${num >= 2 ? 's' : ''} ago`;
+  
+  } else if (delta >= hourMS){
+    const num = delta/ hourMS;
+    return `${num.toFixed(0)} hour${num >= 2 ? 's' : ''} ago`;
+  
+  } else if (delta >= minuteMS){
+    const num = delta/ minuteMS;
+    return `${num.toFixed(0)} minute${num >= 2 ? 's' : ''} ago`;
+  
+  } else {
+    return `Less than 1 minute ago`;
+  }
+}
+
 // Converts an array of crop objects, which each contain propertes X and Y, into a matrix of
 // crop objects where the matrix coords match the crop X and Y properties
 export function cropArrToMatrix(cropArr:Array<any>, length:number, width:number){

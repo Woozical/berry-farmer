@@ -18,7 +18,7 @@ export default function FarmTile({ crop, coordX, coordY }:FarmTileProps){
   const { dispatch, state: {activeGrid} } = useContext(FarmContext);
   const isActive = (coordX === activeGrid.x && coordY === activeGrid.y);
   const handleClick = () => {
-    const newActiveGrid = crop ? { x: coordX, y: coordY, cropID: crop.id} : { x: coordX, y: coordY };
+    const newActiveGrid = { x: coordX, y: coordY };
     dispatch({ type: "ACTIVE_GRID", payload: { activeGrid: isActive ? {x: -1, y: -1} : newActiveGrid }});
   };
 

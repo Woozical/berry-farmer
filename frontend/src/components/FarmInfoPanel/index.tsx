@@ -1,36 +1,44 @@
-import { Nav, NavItem, TabContent, TabPane } from "reactstrap";
-import { useState } from "react";
+import { Nav, NavItem, TabContent, TabPane, NavLink } from "reactstrap";
+import { useState, useContext } from "react";
+import FarmContext from "../../FarmContext";
+import GlobalContext from "../../GlobalContext";
+import CropDetailPane from "../CropDetailsPane";
 
-interface FarmInfoPanelProps {
-  inventory: any, activeFarm: any, activeCrop: any
-}
-
-export default function FarmInfoPanel({ inventory, activeFarm, activeCrop }:FarmInfoPanelProps){
+export default function FarmInfoPanel(){
   const [activeTab, setActiveTab] = useState(1);
-
+  const { state: { farm, activeGrid }} = useContext(FarmContext);
+  const { currentUser } = useContext(GlobalContext);
+  const crop = (activeGrid.x >= 0 && activeGrid.y >= 0) ? farm.cropMatrix[activeGrid.y][activeGrid.x] : null;
   return (
   <div>
     <Nav tabs>
-      <NavItem
-        className={activeTab === 1 ? "active" : ""}
-        onClick={ () => { setActiveTab(1) }}
-      >
-        Frm
+      <NavItem>
+        <NavLink
+          className={activeTab === 1 ? "active" : ""}
+          onClick={ () => { setActiveTab(1) }}
+        >
+          Farm
+        </NavLink>
       </NavItem>
-      <NavItem
-        className={activeTab === 2 ? "active" : ""}
-        onClick={ () => { setActiveTab(2) }}
-      >
-        Inv
+      <NavItem>
+        <NavLink
+          className={activeTab === 2 ? "active" : ""}
+          onClick={ () => { setActiveTab(2) }}     
+        >
+          Inventory
+        </NavLink>
       </NavItem>
-      <NavItem
-        className={activeTab === 3 ? "active" : ""}
-        onClick={ () => { setActiveTab(3) }}
-      >
-        Crop
+      <NavItem>
+        <NavLink
+          className={activeTab === 3 ? "active" : ""}
+          onClick={ () => { setActiveTab(3) }}
+        >
+          Crop
+        </NavLink>
       </NavItem>
     </Nav>
-    <TabContent activeTab={activeTab}>
+
+    <TabContent className="mt-1" activeTab={activeTab}>
       <TabPane tabId={1}>
         Farm
       </TabPane>
@@ -38,9 +46,10 @@ export default function FarmInfoPanel({ inventory, activeFarm, activeCrop }:Farm
         Inventory
       </TabPane>
       <TabPane tabId={3}>
-        Crop
+        {crop && <CropDetailPane crop={crop} />}
       </TabPane>
     </TabContent>
+  
   </div>
   )
 }

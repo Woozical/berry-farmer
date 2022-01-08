@@ -5,8 +5,16 @@ interface MoistureSpriteProps {
 }
 
 export default function MoistureSprite({moisture}:MoistureSpriteProps){
-  const xOffset = Math.floor((moisture / 10) % 10) * 128;
-  const yOffset = Math.min(1, Math.floor(moisture / 95)) * 128;
+  let xOffset:number, yOffset:number;
+  if (moisture >= 101){
+    xOffset = Math.min(9, Math.floor(((moisture - 101) / 4))) * 128;
+    yOffset = 128;
+  } else {
+    xOffset = Math.floor(moisture / 10) * 128;
+    yOffset = moisture >= 100 ? 128 : 0;
+  }
+  // const xOffset = Math.floor((moisture / 10) % 10) * 128;
+  // const yOffset = moisture > 99 ? 128 : 0;
   const style = {
     background: `url("${spritesheet}") -${xOffset}px -${yOffset}px`,
     width: "128px",
