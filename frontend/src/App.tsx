@@ -94,16 +94,8 @@ function App() {
       <div className="App">
         <div className="App-background bg-light"></div>
         <BrowserRouter>
-        <div className="row">
-          <div className="col-1">
           <NavBar />
-          </div>
-          <div className="col-11">
-            {loading ? <LoadingSpinner withText /> : <PageRoutes />}
-          </div>
-        </div>
-          {/* <NavBar />
-          {loading ? <LoadingSpinner withText /> : <PageRoutes />} */}
+          {loading ? <LoadingSpinner withText /> : <PageRoutes />}
         </BrowserRouter>
       </div>
     </GlobalContext.Provider>

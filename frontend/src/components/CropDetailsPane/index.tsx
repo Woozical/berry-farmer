@@ -78,6 +78,9 @@ export default function CropDetailsPane(props:CropDetailsPaneProps){
         <div onClick={waterCrop} className="row text-center">
           <h6 className={props.crop.curGrowthStage === 4 ? "text-secondary" : ""}>Water:</h6>
           <div>
+            <button id="btn-water-5" className="btn btn-outline-primary m-1" disabled={props.crop.curGrowthStage === 4}>
+                +5
+              </button>
             <button id="btn-water-20" className="btn btn-outline-primary m-1" disabled={props.crop.curGrowthStage === 4}>
               +20
             </button>
@@ -86,9 +89,6 @@ export default function CropDetailsPane(props:CropDetailsPaneProps){
             </button>
             <button id="btn-water-60" className="btn btn-outline-primary m-1" disabled={props.crop.curGrowthStage === 4}>
               +60
-            </button>
-            <button id="btn-water-80" className="btn btn-outline-primary m-1" disabled={props.crop.curGrowthStage === 4}>
-              +80
             </button>
             <button id="btn-water-100" className="btn btn-outline-primary m-1" disabled={props.crop.curGrowthStage === 4}>
               +100
