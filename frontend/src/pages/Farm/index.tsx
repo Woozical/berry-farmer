@@ -12,6 +12,10 @@ import { Navigate } from "react-router-dom";
 import FarmContext from "../../FarmContext";
 import { Alert } from "reactstrap";
 
+interface AlertState {
+  msg: string, color: string
+}
+
 // this is rendering twice for some reason
 export default function FarmPage(){
   const DEFAULT_CONTEXT_STATE = {
@@ -57,11 +61,11 @@ export default function FarmPage(){
   const { farmID } = useParams();
   const [state, dispatch] = useReducer(reducer, DEFAULT_CONTEXT_STATE)
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState("");
+  const [alertState, setAlertState] = useState<AlertState>({msg: "", color:"primary"});
   const apiError = useRef(null);
 
-  const notify = (msg: string) => {
-    setNotification(msg);
+  const notify = (msg: string, color: string = "info") => {
+    setAlertState({ msg, color });
   }
   
   /** Load in farm data */
@@ -138,7 +142,12 @@ export default function FarmPage(){
             </div>
             <div className="col-4">
               <FarmInfoPanel notify={notify} />
-              {notification && <Alert color="primary" toggle={() => { setNotification("") }}>{notification}</Alert>}
+              {alertState.msg &&
+              <Alert
+                color={alertState.color || "info"}
+                toggle={() => { notify("") }}>
+                {alertState.msg}
+              </Alert>}
             </div>
           </div>
           }

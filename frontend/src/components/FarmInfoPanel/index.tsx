@@ -20,22 +20,30 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
   /** Function to send crop patch request to API with current active crop, and update local state  */
   const waterCrop = async (amount:number) => {
     if (!crop) return;
-    const updatedCrop = await BerryFarmerAPI.waterCrop(crop.id, amount);
-    dispatch({ type: "CROP_UPDATE", payload: {
-      x: crop.x, y: crop.y,
-      crop: { ...updatedCrop }
-    }});
+    try {
+      const updatedCrop = await BerryFarmerAPI.waterCrop(crop.id, amount);
+      dispatch({ type: "CROP_UPDATE", payload: {
+        x: crop.x, y: crop.y,
+        crop: { ...updatedCrop }
+      }});
+    } catch (err:any) {
+      props.notify(err.msg || "Error", "danger");
+    }
   };
 
   /** Function to send crop harvest request to API with current active crop, and update local state */
   const harvestCrop = async () => {
     if (!crop) return;
-    const harvest = await BerryFarmerAPI.harvestCrop(crop.id);
-    // send a notification someplace of harvest results
-    // update farm
-    dispatch({ type: "CROP_DELETE", payload: { x: crop.x, y: crop.y } });
-    modInventory(harvest.berryType, harvest.amount);
-    props.notify(`Harvested ${harvest.amount} ${harvest.berryType} berr${harvest.amount === 1 ? 'y' : 'ies'}.`);
+    try {
+      const harvest = await BerryFarmerAPI.harvestCrop(crop.id);
+      // send a notification someplace of harvest results
+      // update farm
+      dispatch({ type: "CROP_DELETE", payload: { x: crop.x, y: crop.y } });
+      modInventory(harvest.berryType, harvest.amount);
+      props.notify(`Harvested ${harvest.amount} ${harvest.berryType} berr${harvest.amount === 1 ? 'y' : 'ies'}.`, "success");
+    } catch (err:any) {
+      props.notify(err.msg || "Error", "danger");
+    }
   };
 
   const deleteCrop = async () => {
@@ -43,7 +51,7 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
     await BerryFarmerAPI.deleteCrop(crop.id);
     const { berryType, curGrowthStage } = crop;
     dispatch({ type: "CROP_DELETE", payload: { x: crop.x, y: crop.y } });
-    props.notify(`Destroyed ${berryType} ${['seed', 'sapling', 'plant', 'tree', 'harvest'][curGrowthStage]}.`)
+    props.notify(`Destroyed ${berryType} ${['seed', 'sapling', 'plant', 'tree', 'harvest'][curGrowthStage]}.`, "warning")
   };
 
   const plantCrop = async (berryType:string) => {
