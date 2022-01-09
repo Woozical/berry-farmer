@@ -1,7 +1,9 @@
 import { NavLink, Link } from "react-router-dom";
 import  { useState, useContext } from "react";
+import { addCommas } from "../../utils";
 import { Nav, Collapse, Navbar, NavbarToggler, NavItem } from "reactstrap";
 import GlobalContext from "../../GlobalContext";
+import BerryFarmerAPI from "../../BerryFarmerAPI";
 import "./style.css";
 
 export default function NavBar(){
@@ -26,7 +28,12 @@ export default function NavBar(){
                 <NavLink to="/market">Buy/Sell</NavLink>
               </NavItem>
               <NavItem>
-                <small>Funds: ${currentUser.funds.toFixed(2)}</small>
+                <small>Funds: ${
+                  currentUser.funds < 1000 ?
+                    currentUser.funds.toFixed(2)
+                    :
+                    addCommas(Number(currentUser.funds.toFixed(0)))}
+                </small>
               </NavItem>
               <NavItem>
                 <Link to="/" onClick={logout}>Logout</Link>

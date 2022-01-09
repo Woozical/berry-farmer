@@ -23,7 +23,7 @@ export interface FarmObjectSummary {
 }
 
 export interface BerryProfileObject {
-  type: string, growthTime: number, maxHarvest: number, size: number, pokeType: string,
+  name: string, growthTime: number, maxHarvest: number, size: number, pokeType: string,
   dryRate: number, pokePower: number, idealCloud: number, idealTemp: number
 }
 
@@ -197,7 +197,7 @@ export default class BerryFarmerAPI {
     return { prices: res.data.prices, hot: res.data.hot, not: res.data.not };
   }
 
-  static async getBerryProfile(berryType:string){
+  static async getBerryProfile(berryType:string) : Promise<BerryProfileObject>{
     const res = await this.request(`berries/${berryType}`);
     return res.data.berry;
   }

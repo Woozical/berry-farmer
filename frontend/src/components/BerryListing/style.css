@@ -1,0 +1,8 @@
+.BerryListing-button:hover{
+  color: #0d6efd;
+  cursor: pointer;
+}
+
+.BerryListing-button:active{
+  color: #0954c5;
+}
