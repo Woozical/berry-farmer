@@ -6,6 +6,7 @@ import CropDetailsPane from "../CropDetailsPane";
 import HelpPane from "../HelpPane";
 import BerryFarmerAPI from "../../BerryFarmerAPI";
 import InventoryPane from "../InventoryPane";
+import FarmDetailsPane from "../FarmDetailsPane";
 
 interface FarmInfoPanelProps {
   notify: Function
@@ -17,6 +18,24 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
   const { currentUser, modInventory } = useContext(GlobalContext);
   const crop = (activeGrid.x >= 0 && activeGrid.y >= 0) ? farm.cropMatrix[activeGrid.y][activeGrid.x] : null;
 
+  /** Function to send upgrade request to API */
+  const upgradeFarm = async (type:"length"|"width"|"irrigation") => {
+    if (type === "width" && farm.width >= 9) return;
+    if (type === "length" && farm.length >= 9) return;
+    if (type === "irrigation" && farm.irrigationLVL >= 5) return;
+    try {
+      const updatedFarm = await BerryFarmerAPI.upgradeFarm(farm.id, { type });
+      const key = type === "irrigation" ? "irrigationLVL" : type;
+      const value = updatedFarm[key];
+      dispatch({ type: "FARM_FIELD", payload: {
+        key, value
+      }});
+    } catch (err:any) {
+      console.error(err);
+      props.notify(err.message ? err.message : "Error", "danger");
+    }
+  }
+
   /** Function to send crop patch request to API with current active crop, and update local state  */
   const waterCrop = async (amount:number) => {
     if (!crop) return;
@@ -27,7 +46,8 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
         crop: { ...updatedCrop }
       }});
     } catch (err:any) {
-      props.notify(err.msg || "Error", "danger");
+      console.error(err);
+      props.notify(err.message ? err.message : "Error", "danger");
     }
   };
 
@@ -42,16 +62,22 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
       modInventory(harvest.berryType, harvest.amount);
       props.notify(`Harvested ${harvest.amount} ${harvest.berryType} berr${harvest.amount === 1 ? 'y' : 'ies'}.`, "success");
     } catch (err:any) {
-      props.notify(err.msg || "Error", "danger");
+      console.error(err);
+      props.notify(err.message ? err.message : "Error", "danger");
     }
   };
 
   const deleteCrop = async () => {
     if (!crop) return;
-    await BerryFarmerAPI.deleteCrop(crop.id);
-    const { berryType, curGrowthStage } = crop;
-    dispatch({ type: "CROP_DELETE", payload: { x: crop.x, y: crop.y } });
-    props.notify(`Destroyed ${berryType} ${['seed', 'sapling', 'plant', 'tree', 'harvest'][curGrowthStage]}.`, "warning")
+    try {
+      await BerryFarmerAPI.deleteCrop(crop.id);
+      const { berryType, curGrowthStage } = crop;
+      dispatch({ type: "CROP_DELETE", payload: { x: crop.x, y: crop.y } });
+      props.notify(`Destroyed ${berryType} ${['seed', 'sapling', 'plant', 'tree', 'harvest'][curGrowthStage]}.`, "warning")
+    } catch (err:any) {
+      console.error(err);
+      props.notify(err.message ? err.message : "Error", "danger");
+    }
   };
 
   const plantCrop = async (berryType:string) => {
@@ -62,8 +88,9 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
       dispatch({ type: "CROP_REPLACE", payload: { x, y, crop: planted } });
       modInventory(berryType, -1);
       props.notify(`Planted a ${berryType} berry.`);
-    } catch (err) {
-      console.error("Plant crop error:", err);
+    } catch (err:any) {
+      console.error(err);
+      props.notify(err.message ? err.message : "Error", "danger");
     }
   };
 
@@ -98,7 +125,7 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
 
     <TabContent className="mt-1" activeTab={activeTab}>
       <TabPane tabId={1}>
-        Farm
+        <FarmDetailsPane upgradeCallback={upgradeFarm} />
       </TabPane>
       <TabPane tabId={2}>
         <InventoryPane plantCallback={plantCrop} />

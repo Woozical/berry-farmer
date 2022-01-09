@@ -58,6 +58,17 @@ export function cropArrToMatrix(cropArr:Array<any>, length:number, width:number)
   return matrix;
 }
 
+// Unpacks a matrix of crop objects into a 1 dimensional array
+export function cropMatrixToArr(cropMatrix:Array<Array<any>>){
+  const arr = [];
+  for (let i = 0; i < cropMatrix.length; i++){
+    for (let j = 0; j < cropMatrix[i].length; j++){
+      if (cropMatrix[i][j]) arr.push(cropMatrix[i][j]);
+    }
+  }
+  return arr;
+}
+
 export function validateFormData(formData:any, schema:any){
   const validateRequired = (input:any) => (input !== null && input !== undefined && input !== "");
   const validateMinLength = (input:string, min:number) => (input.length >= min);

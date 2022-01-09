@@ -132,8 +132,12 @@ export default class BerryFarmerAPI {
 
   /** POST upgrade farm */
   static async upgradeFarm(farmID:number, data:UpgradeFarmPayload){
-    const res = await this.request(`farms/${farmID}/upgrade`, "POST", data);
-    return res.data.farm;
+    try {
+      const res = await this.request(`farms/${farmID}/upgrade`, "POST", data);
+      return res.data.farm;
+    } catch (err:any){
+      throw new Error(err.response.data.error.message);
+    }
   }
 
   /** DELETE farm */

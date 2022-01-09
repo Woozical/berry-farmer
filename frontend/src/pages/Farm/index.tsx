@@ -4,13 +4,14 @@ import { useEffect, useState, useRef, useReducer } from "react";
 import BerryFarmerAPI from "../../BerryFarmerAPI";
 import NotFound404 from "../../components/NotFound404";
 import Forbidden403 from "../../components/Forbidden403";
-import { cropArrToMatrix } from "../../utils";
+import { cropArrToMatrix, cropMatrixToArr } from "../../utils";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import FarmInfoPanel from "../../components/FarmInfoPanel";
 import GlobalContext from "../../GlobalContext";
 import { Navigate } from "react-router-dom";
 import FarmContext from "../../FarmContext";
 import { Alert } from "reactstrap";
+import GenericError from "../../components/GenericError";
 
 interface AlertState {
   msg: string, color: string
@@ -32,6 +33,11 @@ export default function FarmPage(){
       }
       case "FARM_FIELD": {
         state.farm[action.payload.key] = action.payload.value;
+        // if length or width is changed, rebuild the crop matrix
+        if (action.payload.key === "length" || action.payload.key === "width"){
+          const unpacked = cropMatrixToArr(state.farm.cropMatrix);
+          state.farm.cropMatrix = cropArrToMatrix(unpacked, state.farm.length, state.farm.width);
+        }
         return {...state};
       }
       case "CROP_REPLACE": {
@@ -62,7 +68,7 @@ export default function FarmPage(){
   const [state, dispatch] = useReducer(reducer, DEFAULT_CONTEXT_STATE)
   const [loading, setLoading] = useState(true);
   const [alertState, setAlertState] = useState<AlertState>({msg: "", color:"primary"});
-  const apiError = useRef(null);
+  const apiError = useRef<null|string|number>(null);
 
   const notify = (msg: string, color: string = "info") => {
     setAlertState({ msg, color });
@@ -84,6 +90,8 @@ export default function FarmPage(){
       } catch (err:any) {
         if (err.response){
           apiError.current = err.response.status;
+        } else {
+          apiError.current = err.message;
         }
         setLoading(false);
       }
@@ -125,7 +133,10 @@ export default function FarmPage(){
       case 404:
         return <NotFound404 />
       default:
-        return <p>Uncaught API error, code: {apiError.current}</p>
+        return (
+          (typeof apiError.current === "string") ? <GenericError errMsg={apiError.current} />
+          : <GenericError errCode={apiError.current} />
+        )
     }
   }
 
