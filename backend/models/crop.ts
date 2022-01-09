@@ -33,6 +33,11 @@ interface CropGrowthCalcProps {
   avgCloud: number
 }
 
+interface CleanupReport {
+  deleted: number,
+  ids: Array<number>
+}
+
 export default class Crop{
   /** Finds crop with given ID in database
    *  Returns { id, moisutre, health, curGrowthStage, plantedAt, berryType, farmID, farmX, farmY }
@@ -262,7 +267,9 @@ export default class Crop{
     if (q.rowCount < 1) throw new NotFoundError(`No crop with id ${cropID}`);
     const { berryType, curGrowthStage, health, maxHarvest, owner } = q.rows[0];
     if (curGrowthStage < 4) throw new BadRequestError(`Crop with id ${cropID} not ready for harvest, growth: ${curGrowthStage}/4`);
-    const harvestAmount = Math.floor((Number(health) * 0.01) * maxHarvest);
+    let harvestAmount = Math.floor((Number(health) * 0.01) * maxHarvest);
+    // Min 1 berry if health is above 10
+    if (Number(health) >= 10 && harvestAmount < 1) harvestAmount = 1;
     if (harvestAmount > 0) await User.addBerry(owner, berryType, harvestAmount);
     await Crop.delete(cropID);
     return { amount: harvestAmount, berryType }
@@ -288,5 +295,23 @@ export default class Crop{
       moisture: Number(res.rows[0].moisture),
       health: Number(res.rows[0].health)
     };
+  }
+
+  /** Deletes all records of crops planted over 6 days ago, that are not fully grown, and are 
+   *  on farms that have gone unchecked for 6+ days.
+   *  This is necessary because the WeatherAPI only allows querying for weather data in the past 7 days.
+   *  We'll get stuck on crop sync if a crop was planted, then not checked for 7+ days.
+   */
+  static async cleanup() : Promise<CleanupReport> {
+    const sixDaysAgo = new Date(Date.now() - (86400000 * 6));
+    const res = await db.query(
+      `DELETE FROM crops
+       WHERE cur_growth_stage < 4
+       AND planted_at < $1
+       AND farm_id IN (SELECT id FROM farms WHERE last_checked_at < $1)
+       RETURNING id`, [sixDaysAgo]
+    );
+    if (res.rowCount > 1) console.log(`CROP CLEANUP: Deleted ${res.rowCount} records.`);
+    return { deleted: res.rowCount, ids: res.rows.map( ({id}) => id)};
   }
 }

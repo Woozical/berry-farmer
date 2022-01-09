@@ -159,7 +159,7 @@ export default class Farm{
         FROM crops
         JOIN berry_profiles bp ON bp.name = crops.berry_type
         JOIN farms ON farms.id = crops.farm_id
-        WHERE farms.id = $1`, [farmID]
+        WHERE farms.id = $1  AND crops.cur_growth_stage < 4`, [farmID]
     );
     if (cropRes.rowCount < 1) throw new NotFoundError(`No crop records found for farm id ${farmID}`);
     // Clean query responses

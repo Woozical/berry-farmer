@@ -389,6 +389,33 @@ describe("Crop sync method", () => {
     }
   });
 
+  it("test 7: ignores fully grown", async () => {
+    // Control crops
+    const plantedAt = new Date(today.getTime() - (hour * 2));
+    const longAgo = new Date(today.getTime() - (hour * 240));
+    await db.query(
+      `INSERT INTO crops (berry_type, cur_growth_stage, health, moisture, planted_at, farm_id, farm_x, farm_y)
+       VALUES ('pecha', 0, 100, 100, $1, $2, 0, 0),
+              ('pecha', 0, 100, 100, $1, $2, 0, 1),
+              ('pecha', 4, 100, 100, $3, $2, 0, 2)`,
+       [plantedAt, farmID, longAgo]
+    );
+    // 2 hour time delta, irrigation lvl should not factor outside growth stages
+    await db.query('UPDATE farms SET last_checked_at = $1, irrigation_lvl = 2 WHERE id = $2', [plantedAt, farmID]);
+    
+    // Perform sync, moisture should drop from 100 -> 78.3 (2 hours: 30 dehydration, +8.3 from 0.08333mm rain)
+    // Smoke test, pullSyncData in Farm should not look at fully grown, if it does, an error will occur here 
+    // as it looks for older weather data than what we have in the test DB.
+    await Farm.syncCrops(farmID);
+
+    // Check DB changes
+    const q = await db.query("SELECT * FROM crops WHERE farm_id = $1 ORDER BY cur_growth_stage", [farmID]);
+    expect(Number(q.rows[0].moisture)).toBeCloseTo(78.33);
+    expect(Number(q.rows[1].moisture)).toBeCloseTo(78.33);
+    // No calculations on fully grown
+    expect(Number(q.rows[2].moisture)).toBeCloseTo(100);
+  });
+
   it("updates lastCheckedAt on farm", async () => {
     const q = await db.query("SELECT * FROM farms");
     const { id } = q.rows[0];

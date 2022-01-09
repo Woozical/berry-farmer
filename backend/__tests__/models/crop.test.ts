@@ -383,6 +383,18 @@ describe("harvest method", () => {
     expect(q.rows[0].amount).toEqual(1);
   });
 
+  it("works, min 1 if >10 health", async () => {
+    await db.query(`UPDATE crops SET cur_growth_stage = 4, health = 10 WHERE id = $1`, [cropID]);
+    const res = await Crop.harvest(cropID);
+    expect(res.amount).toEqual(1);
+    expect(res.berryType).toEqual(berryType);
+    // changes reflect in db
+    let q = await db.query(`SELECT * FROM crops WHERE id = $1`, [cropID]);
+    expect(q.rowCount).toEqual(0);
+    q = await db.query(`SELECT amount FROM user_inventories WHERE username = $1 AND berry_type = $2`, [owner, berryType]);
+    expect(q.rows[0].amount).toEqual(2);
+  });
+
   it("throws BadRequestError if not at max growth stage", async () => {
     try {
       await Crop.harvest(cropID);
@@ -400,4 +412,66 @@ describe("harvest method", () => {
       expect(err).toBeInstanceOf(NotFoundError);
     }
   })
+});
+
+describe("db cleanup method", () => {
+  let farmIDs: Array<Number>;
+  beforeAll( async () => {
+    let q = await db.query("SELECT id FROM geo_profiles LIMIT 1");
+    const {id: locationID} = q.rows[0];
+    const sevenDays = new Date(Date.now() - (86400000 * 7));
+    const fourDays = new Date(Date.now() - (86400000 * 4));
+    /** Seed control parameters */
+    q = await db.query(
+      `INSERT INTO farms (owner, location, last_checked_at)
+       VALUES ('u1', $1, $2),
+              ('u1', $1, $3),
+              ('u1', $1, $4)
+       RETURNING id
+      `, [locationID, sevenDays, fourDays, new Date()]
+    );
+    farmIDs = q.rows.map(({ id }) => id );
+    /** For easy crop querying */
+    await db.query(
+      `INSERT INTO berry_profiles (name, growth_time, size, dry_rate, poke_type, poke_power, ideal_temp, ideal_cloud)
+       VALUES ('oldberry', 1, 1, 1, 'fire', 1, 1, 1),
+              ('ageberry', 1, 1, 1, 'water', 1, 1, 1),
+              ('newberry', 1, 1, 1, 'grass', 1, 1, 1)`
+    );
+    // all old berries except fully grown should meet criteria for deletion
+    // age berries: berries that are 4+/6+ unchecked/plantedAt but not both 6+
+    // age and new berries do not meet criteria for deletion
+    await db.query(
+      `INSERT INTO crops (berry_type, cur_growth_stage, farm_id, farm_x, farm_y, planted_at)
+       VALUES ('oldberry', 0, $1, 0, 0, $4),
+              ('oldberry', 1, $1, 0, 1, $4),
+              ('oldberry', 2, $1, 0, 2, $4),
+              ('oldberry', 3, $1, 1, 0, $4),
+              ('oldberry', 4, $1, 1, 1, $4),
+              ('ageberry', 3, $1, 1, 2, $5),
+              ('ageberry', 4, $1, 2, 0, $5),
+              ('newberry', 3, $1, 2, 1, $6),
+              ('newberry', 4, $1, 2, 2, $6),
+              ('ageberry', 3, $2, 1, 2, $4),
+              ('oldberry', 4, $2, 2, 0, $4),
+              ('oldberry', 4, $3, 0, 0, $4)`, [...farmIDs, sevenDays, fourDays, new Date()]
+    );
+  });
+
+  it("deletes records according to criteria", async () => {
+    const res = await Crop.cleanup();
+    expect(res.deleted).toEqual(4);
+
+    let q = await db.query("SELECT * FROM crops WHERE berry_type = 'oldberry'");
+    // Does not delete fully grown
+    expect(q.rowCount).toEqual(3);
+    for (let row of q.rows){
+      expect(row.cur_growth_stage).toEqual(4);
+    }
+    // Does not delete where if last_checked_at and planted_at are NOT both older than 6+ days
+    q = await db.query("SELECT * FROM crops WHERE berry_type = 'ageberry'");
+    expect(q.rowCount).toEqual(3);
+    q = await db.query("SELECT * FROM crops WHERE berry_type = 'newberry'");
+    expect(q.rowCount).toEqual(2);
+  });
 });
