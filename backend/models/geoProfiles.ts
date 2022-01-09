@@ -25,6 +25,12 @@ export default class GeoProfile {
     ["country", {column:"country", operation: "ILIKE"}]
   ]);
 
+  /** Returns the number of farms in db */
+  static async getCount(): Promise<number>{
+    const res = await db.query("SELECT count(id) FROM geo_profiles");
+    return Number(res.rows[0].count);
+  }
+
   /** Attempts to find the geo_profile ID of a given location with the
    *  unique name, region, country grouping. Throws NotFoundError on no results.
    */

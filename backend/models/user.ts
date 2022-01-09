@@ -17,6 +17,12 @@ interface UpdateProps{
 
 export default class User {
 
+  /** Returns the number of users in db */
+  static async getCount(): Promise<number>{
+    const res = await db.query("SELECT count(username) FROM users");
+    return Number(res.rows[0].count);
+  }
+
   /** Finds user with given username in database
    *  Returns { username, funds, farmCount, inventory, email }, email omitted if hideSensitive = true
    *  Throws NotFoundError if no user with such username

@@ -15,6 +15,12 @@ import { FARM_SYNC_TIMER } from "../config";
 
 const router = express.Router();
 
+router.use(async (req, res, next) => {
+  console.log("Checking for crop cleanup...");
+  await Crop.cleanup();
+  return next();
+});
+
 /** POST /crops/:cropID/harvest (Farm owner only)
  *  If given crop is at max growth, calculates # of berries harvested and adds it to farm owner's inventory
  *  The crop with this ID is then deleted.

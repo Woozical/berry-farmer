@@ -2,6 +2,7 @@
 import express from "express";
 import Farm from "../models/farm";
 import Market from "../models/market";
+import Crop from "../models/crop";
 import jsonschema from "jsonschema";
 import { invalidBadRequest } from "../utils/helpers";
 import farmBuySchema from "../schemas/farmBuy.json";
@@ -14,6 +15,12 @@ import { BadRequestError } from "../expressError";
 import { FARM_SYNC_TIMER } from "../config";
 
 const router = express.Router();
+
+router.use(async (req, res, next) => {
+  console.log("Checking for crop cleanup...");
+  await Crop.cleanup();
+  return next();
+});
 
 // POST /farms (admin only)
 router.post("/", authenticateJWT, ensureAdmin, async (req, res, next) => {

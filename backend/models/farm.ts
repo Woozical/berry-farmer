@@ -33,6 +33,12 @@ const DEFAULT_LENGTH = 3;
 
 export default class Farm{
 
+  /** Returns the number of farms in db */
+  static async getCount(): Promise<number>{
+    const res = await db.query("SELECT count(id) FROM farms");
+    return Number(res.rows[0].count);
+  }
+
   /** Get detail information on a farm with given id
    *  Throws NotFoundError if no farm with such id
    */

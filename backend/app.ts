@@ -8,6 +8,9 @@ import farmRoutes from "./routes/farms";
 import berryRoutes from "./routes/berries";
 import cropRoutes from "./routes/crops";
 import locationRoutes from "./routes/locations";
+import Farm from "./models/farm";
+import User from "./models/user";
+import GeoProfile from "./models/geoProfiles";
 import cors from "cors";
 
 const app: express.Application = express();
@@ -20,8 +23,9 @@ app.use("/farms", farmRoutes);
 app.use("/berries", berryRoutes);
 app.use("/crops", cropRoutes);
 app.use("/locations", locationRoutes);
-app.get('/', (req, res) => {
-  res.json({ message: "You have reached the BerryFarmer API." });
+app.get('/', async (req, res) => {
+  const [farms, users, locations] = await Promise.all([Farm.getCount(), User.getCount(), GeoProfile.getCount()]);
+  return res.json({ message: "You have reached the BerryFarmer API.", farms, users, locations });
 });
 
 /** Catch missing routes and push on 404 Error */
