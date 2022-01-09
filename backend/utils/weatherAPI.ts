@@ -31,7 +31,7 @@ export default class WeatherAPI {
       return res.data
     } catch (err:any) {
       // Re-attempt 3 times if Network or API error
-      if (!err.response || err.response.code / 500 >= 1){
+      if (!err.response || err.response.status / 500 >= 1){
         // Give a name to our callback function for max re-attempts error logging
         const res = await asyncReattempt( function getWeather () {
           return axios.get(endpoint, { params });
@@ -40,7 +40,7 @@ export default class WeatherAPI {
       }
       // On other axios errors, wrap in a better user-facing express error
       else if (err.response){
-        switch (err.response.code){
+        switch (err.response.status){
           case 400:
             throw new BadRequestError(
               `WeatherAPI responded with 400 BadRequest Error, check your search term '${location}' or contact an administrator about this issue.`

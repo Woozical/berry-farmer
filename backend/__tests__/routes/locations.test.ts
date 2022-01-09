@@ -160,7 +160,7 @@ describe("POST /locations/:locationID", () => {
   });
 
   it("works: temp API failure", async () => {
-    mockedAxios.get.mockRejectedValueOnce({ response: { message: "server overload!!!", code: 500 } });
+    mockedAxios.get.mockRejectedValueOnce({ response: { message: "server overload!!!", status: 500 } });
     mockedAxios.get.mockResolvedValue({ data: HistoryAPIResponse });
     const resp = await request(app).post("/locations")
     .send({ search: "london" })
@@ -194,7 +194,7 @@ describe("POST /locations/:locationID", () => {
   });
 
   it("pushes API 400 responses", async () => {
-    mockedAxios.get.mockRejectedValue({ response: {message: "not found",  code: 404 } });
+    mockedAxios.get.mockRejectedValue({ response: {message: "not found",  status: 404 } });
     const resp = await request(app).post("/locations")
     .send({ search: "london "})
     .set("authorization", usr1Token);

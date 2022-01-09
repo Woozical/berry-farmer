@@ -45,7 +45,7 @@ describe("getWeatherOn", () => {
   });
 
   test("should make reattempts on 500 responses", async () => {
-    const axiosRes = { response: { message: "server error!", code: 503 } }
+    const axiosRes = { response: { message: "server error!", status: 503 } }
     mockedAxios.get.mockRejectedValue(axiosRes);
     try {
       await WeatherAPI.getWeatherOn("London", "2020-02-20");
@@ -58,7 +58,7 @@ describe("getWeatherOn", () => {
   });
   
   test("should not make reattempt on non-server/connection error, and preserve API response code", async () => {
-    const axiosRes = { response: {message: "not found",  code: 404 }}
+    const axiosRes = { response: {message: "not found",  status: 404 }}
     mockedAxios.get.mockRejectedValue(axiosRes);
     try {
       await WeatherAPI.getWeatherOn("London", "2020-02-20");
@@ -71,7 +71,7 @@ describe("getWeatherOn", () => {
 
   test("should return data on successful reattempt", async () => {
     mockedAxios.get.mockRejectedValueOnce({ msg: "Could not connect!" });
-    mockedAxios.get.mockRejectedValueOnce({ response: { message: "server overload!!!", code: 500 } });
+    mockedAxios.get.mockRejectedValueOnce({ response: { message: "server overload!!!", status: 500 } });
     mockedAxios.get.mockResolvedValue(apiRes);
     const data = await WeatherAPI.getWeatherOn("London", "2020-02-20");
     expect(data.location.name).toEqual("London");
