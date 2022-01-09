@@ -16,7 +16,6 @@ import { FARM_SYNC_TIMER } from "../config";
 const router = express.Router();
 
 router.use(async (req, res, next) => {
-  if (process.env.NODE_ENV !== "test") console.log("Checking for crop cleanup...");
   await Crop.cleanup();
   return next();
 });

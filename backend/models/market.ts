@@ -8,8 +8,8 @@ interface DimensionUpProps{
   width:number
 }
 
-const MAX_LENGTH = 10;
-const MAX_WIDTH = 10;
+const MAX_LENGTH = 9;
+const MAX_WIDTH = 9;
 const MAX_IRRIG = 5;
 const MAX_PLOTS = 3;
 
@@ -48,7 +48,7 @@ export default class Market {
       ((width + q.rows[0].width) * Market.LW_PRICE));
 
     if ( Number(q.rows[0].funds) < upgradePrice ){
-      throw new BadRequestError(`${username} has insufficient funds for requested upgrades`);
+      throw new BadRequestError(`${username} has insufficient funds for requested upgrades. (Required: $${upgradePrice})`);
     }
 
     const farm = await Farm.update(farmID, { length: length + q.rows[0].length, width: width + q.rows[0].width });
@@ -79,7 +79,7 @@ export default class Market {
     }
     const upgradePrice = (upgradedIrrigLVL * Market.IRRIG_PRICE);
     if ( Number(q.rows[0].funds) < upgradePrice ){
-      throw new BadRequestError(`${username} has insufficient funds for requested upgrades`);
+      throw new BadRequestError(`${username} has insufficient funds for requested upgrades (Required: $${upgradePrice})`);
     }
     const farm = await Farm.update(farmID, {irrigationLVL: upgradedIrrigLVL});
     await User.update(username, {funds: Number(q.rows[0].funds) - upgradePrice});
@@ -104,8 +104,8 @@ export default class Market {
       if (err instanceof NotFoundError) throw new BadRequestError(`Invalid username ${username}`);
       else throw err;
     }
-    if (user.funds < Market.PLOT_PRICE) throw new BadRequestError(`${username} has insufficient funds for new farm plot`);
-    if (user.farmCount+1 > MAX_PLOTS) throw new BadRequestError(`${username} has reached max amount of farm plots`);
+    if (user.funds < Market.PLOT_PRICE) throw new BadRequestError(`${username} has insufficient funds for new farm plot. (Required: $${Market.PLOT_PRICE})`);
+    if (user.farmCount+1 > MAX_PLOTS) throw new BadRequestError(`${username} has reached maximum amount of farm plots.`);
     const res = await Farm.create({ owner: username, locationID });
     await User.update(username, { funds: user.funds - Market.PLOT_PRICE });
 
@@ -129,7 +129,7 @@ export default class Market {
     }
     /** Berries are purchased at a markup of their market value */
     const buyOrderPrice = Number((berryPrice * Market.BERRY_PURCHASE_MARKUP * berryAmount).toFixed(2));
-    if (user.funds < buyOrderPrice) throw new BadRequestError(`${username} has insufficient funds for purchase. Required: ${buyOrderPrice}.`);
+    if (user.funds < buyOrderPrice) throw new BadRequestError(`${username} has insufficient funds for purchase. (Required: $${buyOrderPrice})`);
     await User.addBerry(username, berryType, berryAmount);
     await User.update(username, { funds: user.funds - buyOrderPrice });
     return { message: `Bought ${berryAmount} ${berryType} for $${buyOrderPrice}`, buyOrderPrice };
