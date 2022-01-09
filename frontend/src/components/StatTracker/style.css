@@ -1,0 +1,9 @@
+.StatTracker {
+  opacity: 0;
+  margin: 0px 0px 0px 35px;
+  animation: dropIn-fadeIn ease-out 1s forwards;
+  -webkit-animation: dropIn-fadeIn ease-out 1s forwards;
+  -moz-animation: dropIn-fadeIn ease-out 1s forwards;
+  -o-animation: dropIn-fadeIn ease-out 1s forwards;
+  -ms-animation: dropIn-fadeIn ease-out 1s forwards;
+}

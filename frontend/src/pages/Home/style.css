@@ -1,0 +1,7 @@
+.Home-welcome{
+  animation: dropIn-fadeIn ease-out 1s forwards;
+  -webkit-animation: dropIn-fadeIn ease-out 1s forwards;
+  -moz-animation: dropIn-fadeIn ease-out 1s forwards;
+  -o-animation: dropIn-fadeIn ease-out 1s forwards;
+  -ms-animation: dropIn-fadeIn ease-out 1s forwards;
+}

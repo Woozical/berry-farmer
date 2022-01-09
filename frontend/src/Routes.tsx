@@ -12,7 +12,7 @@ export default function PageRoutes () {
       <Route path="/farm/create" element={ <CreateFarmPage />} />
       <Route path="/farm/:farmID" element={ <FarmPage />} />
       <Route path="/farm" element= { <FarmListPage /> } />
-      <Route path="/signup" element={ <SignupLoginPage />} />
+      <Route path="/signup" element={ <SignupLoginPage showSignup />} />
       <Route path="/login" element ={ <SignupLoginPage />} />
       <Route path="/" element = { <HomePage />} />
       <Route path="*" element = { <NotFound404 />} />

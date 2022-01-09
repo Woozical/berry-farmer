@@ -6,8 +6,12 @@ import SignupForm from "../../components/SignupForm";
 import LoginForm from "../../components/LoginForm";
 import "./style.css";
 
-export default function SignupLoginPage(){
-  const [showLogin, setShowLogin] = useState(true);
+interface SignupLoginPageProps {
+  showSignup?: boolean
+}
+
+export default function SignupLoginPage(props:SignupLoginPageProps){
+  const [showSignup, setShowSignup] = useState(props.showSignup || false);
   const { login, signup } = useContext(GlobalContext);
   const [auth, redirect] = useAuthenticated("/");
   if (auth) return redirect;
@@ -15,27 +19,27 @@ export default function SignupLoginPage(){
   return (
   <main className="pt-5 pb-5 text-start">
     <div className="container col-md-6 offset-md-3 col-lg-4 offset-lg-4">
-      <h1 className="mb-3 text-center">{showLogin ? 'Login' : 'Sign Up'}</h1>
+      <h1 className="mb-3 text-center">{showSignup ? 'Sign Up' : 'Login'}</h1>
       <Nav tabs>
         <NavItem className="Signup-Login-tab">
           <NavLink
-            className={showLogin ? "active" : ""}
-            onClick={ () => { setShowLogin(true) }}
+            className={showSignup ? "" : "active"}
+            onClick={ () => { setShowSignup(false) }}
           >
             Login
           </NavLink>
         </NavItem>
         <NavItem className="Signup-Login-tab">
           <NavLink
-            className={showLogin ? "" : "active"}
-            onClick={ () => { setShowLogin(false) }}  
+            className={showSignup ? "active" : ""}
+            onClick={ () => { setShowSignup(true) }}  
           >
             Signup
           </NavLink>
         </NavItem>
       </Nav>
       <div className="mb-1"></div>
-      { showLogin ? <LoginForm submitCallback={login} /> : <SignupForm submitCallback={signup} />}
+      { showSignup ? <SignupForm submitCallback={signup} /> : <LoginForm submitCallback={login} /> }
     </div>
   </main>)
 }

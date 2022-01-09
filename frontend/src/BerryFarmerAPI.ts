@@ -75,6 +75,12 @@ export default class BerryFarmerAPI {
   }
 
   // API routes
+  /** Gets the base endpoint ("/") of API, which returns basic counts of users, farms and locations in DB */
+  static async getSplash(){
+    const res = await this.request("");
+    return res.data;
+  }
+
   /************************************************************** AUTH */
 
   /** POSTs to /auth/register with given data to create a new user account

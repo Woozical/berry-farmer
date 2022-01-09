@@ -36,3 +36,52 @@
     transform: rotate(360deg);
   }
 }
+
+/* fading text animations */
+/* Fade In from top */
+@keyframes dropIn-fadeIn{
+  0% {opacity: 0; margin: -18px 0px 0px 0px;}
+  100% {opacity: 1; margin: 0px 0px 0px 0px;}
+}
+
+/* Mozilla */
+@-moz-keyframes dropIn-fadeIn{
+  0% {opacity: 0; margin: -18px 0px 0px 0px;}
+  100% {opacity: 1; margin: 0px 0px 0px 0px;}
+}
+
+/* Safari and Chrome */
+@-webkit-keyframes dropIn-fadeIn{
+  0% {opacity: 0; margin: -18px 0px 0px 0px;}
+  100% {opacity: 1; margin: 0px 0px 0px 0px;}
+}
+
+/* Opera */
+@-o-keyframes dropIn-fadeIn{
+  0% {opacity: 0; margin: -18px 0px 0px 0px;}
+  100% {opacity: 1; margin: 0px 0px 0px 0px;}
+}
+
+/* Fade In from left */
+@keyframes fromLeft-fadeIn{
+  0% {opacity: 0; margin: 0px 0px 0px -18px;}
+  100% {opacity: 1; margin: 0px 0px 0px 0px;}
+}
+
+/* Mozilla */
+@-moz-keyframes fromLeft-fadeIn{
+  0% {opacity: 0; margin: 0px 0px 0px -18px;}
+  100% {opacity: 1; margin: 0px 0px 0px 0px;}
+}
+
+/* Safari and Chrome */
+@-webkit-keyframes fromLeft-fadeIn{
+  0% {opacity: 0; margin: 0px 0px 0px -18px;}
+  100% {opacity: 1; margin: 0px 0px 0px 0px;}
+}
+
+/* Opera */
+@-o-keyframes fromLeft-fadeIn{
+  0% {opacity: 0; margin: 0px 0px 0px -18px;}
+  100% {opacity: 1; margin: 0px 0px 0px 0px;}
+}
