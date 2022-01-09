@@ -1,0 +1,10 @@
+.NewFarmCard{
+  opacity: 0;
+  cursor: pointer;
+  animation: fromLeft-fadeIn ease-out 0.5s forwards;
+  -webkit-animation: fromLeft-fadeIn ease-out 0.5s forwards;
+  -moz-animation: fromLeft-fadeIn ease-out 0.5s forwards;
+  -o-animation: fromLeft-fadeIn ease-out 0.5s forwards;
+  -ms-animation: fromLeft-fadeIn ease-out 0.5s forwards;
+  animation-delay: .3s;
+}

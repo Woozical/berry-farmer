@@ -59,10 +59,9 @@ export default class BerryFarmerAPI {
   // Wrapper method to include auth token, params, error-catching, etc. in axios request
   static async request(endpoint:string, method:Method="get", data={}){
     console.debug("API CALL:", endpoint, data, method);
-
     const url = `${BASE_URL}/${endpoint}`;
     const headers = { Authorization: `Bearer ${BerryFarmerAPI.token}`};
-    const params = (method === "get") ? data : {};
+    const params = (method.toLowerCase() === "get") ? data : {};
     try {
       return await axios({ url, data, params, headers, method });
     } catch (err:any) {
@@ -218,9 +217,10 @@ export default class BerryFarmerAPI {
     if (params.id){
       const res = await this.request(`locations/${params.id}`);
       return res.data.location;
+    } else {
+      const res = await this.request("locations", "GET", params);
+      return res.data.locations;
     }
-    const res = await this.request("locations", "GET", params);
-    return res.data.locations;
   }
 
   /** POST location/create */
@@ -230,13 +230,18 @@ export default class BerryFarmerAPI {
       const res = await this.request("locations", "POST", { search });
       return res.data.location;
     } catch (err:any) {
-      if (err.response && err.response.data.err.status === 400 && err.message.includes("already exists")){
+      if (err.response && err.response.data.error.message.includes("already exists")){
+        const message = err.response.data.error.message;
         // Bad request and location already exists, grab existing location from error message
-        const [name, region, country] = err.message.split("(")[1].split(")")[0].split("|");
+        const [name, region, country] = message.split("(")[1].split(")")[0].split("|");
         // Look up locaton object from API
         const [ location ] = await this.getLocations({ name, region, country });
         // Return a match if we got it
         if (location) return location;
+      }
+      // Throw message from server if other type of bad request
+      else if (err.response && err.response.data.error.status === 400){
+        throw new Error(err.response.data.error.message);
       }
       // Throw original error if we reach here
       throw err;

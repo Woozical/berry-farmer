@@ -22,6 +22,7 @@ export default function InventoryPane (props:InventoryPaneProps) {
   };
   
   const berryListing = (berryType:string) => {
+    if (!currentUser) return;
     const title = titleCase(berryType);
     const disabled = ( !(!crop) || activeGrid.y < 0 || activeGrid.x < 0);
     return  (
@@ -35,12 +36,12 @@ export default function InventoryPane (props:InventoryPaneProps) {
     );
   };
   // If we have 0 of every berry in current user's inventory, show a help message instead
-  const showInv = Object.values(currentUser.inventory).some(v => v);
+  const showInv = Object.values(currentUser!.inventory).some(v => v);
 
   return (showInv ? 
     <ListGroup onClick={handleClick}>
-      {Object.keys(currentUser.inventory).map(berryType => {
-        return currentUser.inventory[berryType] ? berryListing(berryType) : <React.Fragment key={berryType} />;
+      {Object.keys(currentUser!.inventory).map(berryType => {
+        return currentUser!.inventory[berryType] ? berryListing(berryType) : <React.Fragment key={berryType} />;
       })}
     </ListGroup>
     :

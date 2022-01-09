@@ -1,12 +1,18 @@
 import { Card, CardTitle, CardSubtitle, CardBody } from "reactstrap";
+import "./style.css";
 
 interface NewFarmCardProps {
   onClick: Function
 }
 
-export default function NewFarmCard() {
+export default function NewFarmCard(props:NewFarmCardProps) {
+
+  const handleClick = () => {
+    props.onClick();
+  }
+
   return (
-      <Card className="text-center p-3">
+      <Card onClick={handleClick} className="NewFarmCard text-center p-3">
         <CardTitle tag="h3">
           New Farm
         </CardTitle>

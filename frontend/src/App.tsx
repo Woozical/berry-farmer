@@ -4,13 +4,13 @@ import PageRoutes from "./Routes";
 import LoadingSpinner from './components/LoadingSpinner';
 import { useState, useEffect } from "react";
 import BerryFarmerAPI from './BerryFarmerAPI';
-import GlobalContext from './GlobalContext';
+import GlobalContext, {ICurrentUser} from './GlobalContext';
 import type { LoginPayload, RegisterPayload } from "./BerryFarmerAPI";
 import NavBar from './components/NavBar';
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<null|ICurrentUser>(null);
   
   /** App Mount, attempt to read user info from local storage */
   useEffect( () => {
@@ -81,22 +81,26 @@ function App() {
   /** Updates the currentUser's inventory */
   const modInventory = (berryType:string, amountAdjust:number) => {
     if (currentUser === null) return;
-    //@ts-ignore
     const oldAmt = currentUser.inventory[berryType] || 0;
-    //@ts-ignore
     currentUser.inventory[berryType] = oldAmt + amountAdjust;
-    //@ts-ignore
+    setCurrentUser({...currentUser});
+  };
+
+  const updateNumericField = (key: "funds" | "farmCount", amountAdjust: number) => {
+    if (currentUser === null) return;
+    currentUser[key] += amountAdjust;
     setCurrentUser({...currentUser});
   };
 
   return (
-    <GlobalContext.Provider value= { { currentUser, login, logout, signup, modInventory } }>
+    <GlobalContext.Provider value= { { currentUser, login, logout, signup, modInventory, updateNumericField } }>
       <div className="App">
         <div className="App-background bg-light"></div>
         <BrowserRouter>
           <NavBar />
           {loading ? <LoadingSpinner withText /> : <PageRoutes />}
         </BrowserRouter>
+        <small className="text-muted">debug: {BerryFarmerAPI.token}</small>
       </div>
     </GlobalContext.Provider>
   );

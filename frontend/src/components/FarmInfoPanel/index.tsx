@@ -13,7 +13,7 @@ interface FarmInfoPanelProps {
 }
 
 export default function FarmInfoPanel(props:FarmInfoPanelProps){
-  const [activeTab, setActiveTab] = useState(1);
+  const [activeTab, setActiveTab] = useState(3);
   const { dispatch, state: { farm, activeGrid }} = useContext(FarmContext);
   const { currentUser, modInventory } = useContext(GlobalContext);
   const crop = (activeGrid.x >= 0 && activeGrid.y >= 0) ? farm.cropMatrix[activeGrid.y][activeGrid.x] : null;
@@ -81,7 +81,7 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
   };
 
   const plantCrop = async (berryType:string) => {
-    if (currentUser.inventory[berryType] < 1) return;
+    if (!currentUser || currentUser.inventory[berryType] < 1) return;
     try {
       const {x, y} = activeGrid;
       const planted = await BerryFarmerAPI.plantCrop({ farmID: farm.id, x, y, berryType });

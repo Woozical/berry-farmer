@@ -1,0 +1,16 @@
+.FarmSummaryLink {
+  opacity: 0;
+  animation: fromLeft-fadeIn ease-out 0.5s forwards;
+  -webkit-animation: fromLeft-fadeIn ease-out 0.5s forwards;
+  -moz-animation: fromLeft-fadeIn ease-out 0.5s forwards;
+  -o-animation: fromLeft-fadeIn ease-out 0.5s forwards;
+  -ms-animation: fromLeft-fadeIn ease-out 0.5s forwards;
+}
+
+.FarmSummaryLink:nth-of-type(2) {
+  animation-delay: .2s;
+}
+
+.FarmSummaryLink:nth-of-type(3) {
+  animation-delay: .3s;
+}

@@ -1,6 +1,7 @@
 import type { FarmObjectSummary } from "../../BerryFarmerAPI";
 import { Card, CardBody, CardTitle, CardSubtitle } from "reactstrap";
 import { Link } from "react-router-dom"
+import "./style.css";
 
 interface FarmSummaryLinkProps {
   farm: FarmObjectSummary, deleteClick: Function
@@ -13,7 +14,7 @@ export default function FarmSummaryLink ( { farm, deleteClick }:FarmSummaryLinkP
   }
 
   return (
-    <Card className="text-start p-3">
+    <Card className="FarmSummaryLink text-start p-3">
       <CardTitle tag="h3" className="row">
         <div className="col-11">
           <Link to={`/farm/${farm.id}`}>

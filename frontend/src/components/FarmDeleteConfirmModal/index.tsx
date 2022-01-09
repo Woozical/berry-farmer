@@ -1,28 +1,52 @@
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from "reactstrap"
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Alert } from "reactstrap"
+import { useState } from "react";
 
 interface FarmDeleteConfirmModalProps {
   toggleFunction: Function, confirmFunction: Function, isOpen: boolean
 }
 
 export default function FarmDeleteConfirmModal (props:FarmDeleteConfirmModalProps) {
+  const [alertState, setAlertState] = useState<{msg: string, color: string}>({msg: "", color:"primary"});
+
+  const notify = (msg: string, color: string = "info") => {
+    setAlertState({ msg, color });
+  };
+
+  const handleConfirmClick = () => {
+    try {
+      props.confirmFunction();
+    } catch (err:any) {
+      console.error(err);
+      notify(err.message ? err.message : "Error", "danger");
+    }
+  };
+
   return (
-    <Modal isOpen={props.isOpen} toggle={() => { props.toggleFunction() }}>
-      <ModalHeader toggle={() => { props.toggleFunction() }}>
+    <Modal isOpen={props.isOpen} toggle={() => { props.toggleFunction(); }}>
+      <ModalHeader toggle={() => { props.toggleFunction(); }}>
         Warning!
       </ModalHeader>
       <ModalBody>
         Are you sure that you want to delete this farm? All planted crops and farm upgrades will be lost forever
         and are not recoverable.
+        {alertState.msg &&
+          <Alert
+            color={alertState.color || "info"}
+            className="mt-4 text-center"
+            toggle={() => { notify(""); }}
+          >
+            {alertState.msg}
+          </Alert>}
       </ModalBody>
       <ModalFooter>
         <Button
           color="danger"
-          onClick={() => { props.confirmFunction() }}
+          onClick={handleConfirmClick}
         >
           Delete
         </Button>
         {' '}
-        <Button onClick={() => { props.toggleFunction() }}>
+        <Button onClick={() => { props.toggleFunction(); }}>
           Cancel
         </Button>
       </ModalFooter>
