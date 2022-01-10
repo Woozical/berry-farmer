@@ -30,6 +30,7 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
       dispatch({ type: "FARM_FIELD", payload: {
         key, value
       }});
+      props.notify(`Upgraded ${type}`, "info");
     } catch (err:any) {
       console.error(err);
       props.notify(err.message ? err.message : "Error", "danger");
@@ -96,7 +97,7 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
 
   return (
   <div>
-    <Nav tabs>
+    <Nav justified tabs>
       <NavItem>
         <NavLink
           className={activeTab === 1 ? "active" : ""}

@@ -1,9 +1,9 @@
 import { NavLink, Link } from "react-router-dom";
 import  { useState, useContext } from "react";
 import { addCommas } from "../../utils";
-import { Nav, Collapse, Navbar, NavbarToggler, NavItem } from "reactstrap";
+import { Nav, Collapse, Navbar, NavbarToggler, NavItem, NavbarText } from "reactstrap";
 import GlobalContext from "../../GlobalContext";
-import BerryFarmerAPI from "../../BerryFarmerAPI";
+import spade from "../../media/spade-b.png";
 import "./style.css";
 
 export default function NavBar(){
@@ -15,10 +15,13 @@ export default function NavBar(){
   
   return (
     <Navbar color="dark" expand="sm" dark>
-      <NavLink to="/" className="navbar-brand">BerryFarmer</NavLink>
+      <NavLink to="/" className="navbar-brand">
+        <img src={spade} alt="" />
+        BerryFarmer
+      </NavLink>
       <NavbarToggler onClick={toggleOpen} />
       <Collapse className="justify-content-end" navbar isOpen={isOpen}>
-        <Nav navbar>
+        <Nav className="align-items-center" navbar>
           { currentUser ?
             <>
               <NavItem>
@@ -27,14 +30,13 @@ export default function NavBar(){
               <NavItem>
                 <NavLink to="/market">Buy/Sell</NavLink>
               </NavItem>
-              <NavItem>
-                <small>Funds: ${
+              <NavbarText className="text-white">
+                Funds: ${
                   currentUser.funds < 1000 ?
                     currentUser.funds.toFixed(2)
                     :
                     addCommas(Number(currentUser.funds.toFixed(0)))}
-                </small>
-              </NavItem>
+              </NavbarText>
               <NavItem>
                 <Link to="/" onClick={logout}>Logout</Link>
               </NavItem>

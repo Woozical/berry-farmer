@@ -7,6 +7,7 @@ import BerryFarmerAPI from './BerryFarmerAPI';
 import GlobalContext, {ICurrentUser} from './GlobalContext';
 import type { LoginPayload, RegisterPayload } from "./BerryFarmerAPI";
 import NavBar from './components/NavBar';
+import Footer from './components/Footer';
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -94,13 +95,13 @@ function App() {
 
   return (
     <GlobalContext.Provider value= { { currentUser, login, logout, signup, modInventory, updateNumericField } }>
-      <div className="App">
+      <div className="App  d-flex flex-column min-vh-100">
         <div className="App-background bg-light"></div>
         <BrowserRouter>
           <NavBar />
           {loading ? <LoadingSpinner withText /> : <PageRoutes />}
+          <Footer />
         </BrowserRouter>
-        <small className="text-muted">debug: {BerryFarmerAPI.token}</small>
       </div>
     </GlobalContext.Provider>
   );

@@ -1,7 +1,24 @@
 .Home-welcome{
+  opacity: 0;
   animation: dropIn-fadeIn ease-out 1s forwards;
   -webkit-animation: dropIn-fadeIn ease-out 1s forwards;
   -moz-animation: dropIn-fadeIn ease-out 1s forwards;
   -o-animation: dropIn-fadeIn ease-out 1s forwards;
   -ms-animation: dropIn-fadeIn ease-out 1s forwards;
+}
+
+.Home-bg{
+  opacity: 0;
+  min-width: 100vw;
+  min-height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -3;
+  background: url('../../media/bg-berries.png');
+  animation: bg-fadeIn ease-out 1s forwards;
+  -moz-animation: bg-fadeIn ease-out 1s forwards;
+  -webkit-animation: bg-fadeIn ease-out 1s forwards;
+  -o-animation: bg-fadeIn ease-out 1s forwards;
+  -ms-animation: bg-fadeIn ease-out 1s forwards;
 }

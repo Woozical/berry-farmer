@@ -15,19 +15,19 @@ export default function FarmSummaryLink ( { farm, deleteClick }:FarmSummaryLinkP
 
   return (
     <Card className="FarmSummaryLink text-start p-3">
-      <CardTitle tag="h3" className="row">
+      <CardTitle tag="h5" className="row justify-content-between">
         <div className="col-11">
-          <Link to={`/farm/${farm.id}`}>
+          <Link className="text-decoration-none" to={`/farm/${farm.id}`}>
           {farm.locationName}, {farm.locationRegion}
           </Link>
         </div>
         <div className="col-1" onClick={handleClick} >
-          <i className="bi text-danger bi-trash-fill"></i>          
+          <i className="bi text-danger bi-trash-fill FarmSummaryLink-DeleteIcon"></i>          
         </div>
       </CardTitle>
-      <CardSubtitle className="mb-2 text-muted" tag="h6">{farm.locationCountry}</CardSubtitle>
+      <CardSubtitle className="mb-2 text-muted">{farm.locationCountry}</CardSubtitle>
       <CardBody>
-        {farm.width}x{farm.length} Farm <br /> Irrigation Level: {farm.irrigationLVL}
+        <small>{farm.width}x{farm.length} Farm <br /> Irrigation Level: {farm.irrigationLVL}/5</small>
       </CardBody>
     </Card>
   )

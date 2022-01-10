@@ -3,6 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import BerryFarmerAPI from "../../BerryFarmerAPI";
 import StatTracker from "../../components/StatTracker";
 import { Link } from "react-router-dom";
+import { titleCase } from "../../utils";
 import "./style.css";
 
 export default function HomePage(){
@@ -30,7 +31,8 @@ export default function HomePage(){
 
   return (
   <main className="pt-3 pb-2 text-center">
-    <h1 className="Home-welcome">{ currentUser ? `Welcome, ${currentUser.username}!` : "Welcome!" }</h1>
+    <div className="Home-bg"></div>
+    <h1 className="Home-welcome">{ currentUser ? `Welcome, ${titleCase(currentUser.username)}!` : "Welcome!" }</h1>
     <br />
     { 
     apiError.current ?

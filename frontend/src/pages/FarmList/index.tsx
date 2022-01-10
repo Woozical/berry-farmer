@@ -8,6 +8,7 @@ import NewFarmCard from "../../components/NewFarmCard";
 import FarmDeleteConfirmModal from "../../components/FarmDeleteConfirmModal";
 import FarmCreateForm from "../../components/FarmCreateForm";
 import { titleCase } from "../../utils";
+import "./style.css";
 
 export default function FarmListPage(){
   const MAX_FARMS = 3;
@@ -78,7 +79,7 @@ export default function FarmListPage(){
   if (!auth) return redirect;
 
   return (
-    <main className="pt-3 pb-2">
+    <main className="pt-3 pb-2 FarmList">
       <FarmDeleteConfirmModal
         isOpen={showDeleteConfirm}
         confirmFunction={deleteFarm}
@@ -90,7 +91,7 @@ export default function FarmListPage(){
         toggleFunction={hideCreate}
       />
             <h1>{titleCase(currentUser!.username)}'s Farms</h1>
-      <div className="container w-75">
+      <div className="container w-50">
         <hr />
         <div>
           {farms.map( (farm) => {

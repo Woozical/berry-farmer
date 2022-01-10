@@ -43,3 +43,12 @@ nav a:not(.navbar-brand):hover {
 nav a.navbar-brand{
   margin-left: 1rem;
 }
+
+.navbar-brand img {
+  object-fit: scale-down;
+  max-width: 2rem;
+}
+
+.nav-link:hover {
+  cursor: pointer;
+}

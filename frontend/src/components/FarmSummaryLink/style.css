@@ -7,6 +7,10 @@
   -ms-animation: fromLeft-fadeIn ease-out 0.5s forwards;
 }
 
+.FarmSummaryLink-DeleteIcon:hover {
+  cursor: pointer;
+}
+
 .FarmSummaryLink:nth-of-type(2) {
   animation-delay: .2s;
 }

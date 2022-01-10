@@ -7,6 +7,19 @@
   pointer-events: none;
 }
 
+.App-background{
+  min-width: 100vw;
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -3;
+}
+
+.fs-7{
+  font-size: 0.65rem;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
@@ -35,6 +48,27 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* fade in animation for very transparent bgs */
+@keyframes bg-fadeIn{
+  0% {opacity: 0;}
+  100% {opacity: 0.05;}
+}
+/* Mozilla */
+@-moz-keyframes bg-fadeIn{
+  0% {opacity: 0;}
+  100% {opacity: 0.05;}
+}
+/* Safari & Chrome */
+@-webkit-keyframes bg-fadeIn{
+  0% {opacity: 0;}
+  100% {opacity: 0.05;}
+}
+/* Opera */
+@-o-keyframes bg-fadeIn{
+  0% {opacity: 0;}
+  100% {opacity: 0.05;}
 }
 
 /* fading text animations */
