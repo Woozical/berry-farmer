@@ -1,5 +1,5 @@
 import { useState, useEffect, ChangeEvent, useContext } from "react";
-import { Collapse, Card, CardTitle, CardSubtitle, CardBody, Button, Popover, PopoverBody, PopoverHeader, CardHeader } from "reactstrap";
+import { Card, CardBody, Button, Popover, PopoverBody, PopoverHeader, CardHeader } from "reactstrap";
 import BerryFarmerAPI from "../../BerryFarmerAPI";
 import LoadingSpinner from "../LoadingSpinner";
 import { titleCase } from "../../utils";
@@ -41,12 +41,17 @@ export default function BerryListing (props:BerryListingProps) {
     }
   };
 
-  const adjustAmount = (num:number) =>{
+  const adjustAmount = (num:number) => {
     if (!currentUser) return;
     const newAmt = num + orderAmount;
     if (!props.buyMode && newAmt > currentUser.inventory[props.berryType]) return;
     setOrderAmount(Math.max(0, Math.min(99, newAmt)));
-  }
+  };
+
+  const order = async () => {
+    await props.orderCallback(props.berryType, orderAmount);
+    setOrderAmount(0);
+  };
 
   return (
     <>
@@ -70,7 +75,7 @@ export default function BerryListing (props:BerryListingProps) {
         <i onClick={ () => {adjustAmount(1)}} className="bi bi-plus-circle ms-1 BerryListing-button" />
       </td>
       <td>
-        <Button color="primary">Order</Button>
+        <Button onClick={order} color="primary">Order</Button>
       </td>
     </tr>
     <Popover target={`market-row-${props.berryType}`} isOpen={showDetailed}>
@@ -103,44 +108,4 @@ export default function BerryListing (props:BerryListingProps) {
     </>
     
   );
-  // return (
-  //   <Card>
-  //     <CardTitle>
-  //       <div className="row align-items-center">
-  //         <div className="col-1">
-  //         <Button onClick={ () => {setShowDetailed(b => !b)}}>{showDetailed ? "-" : "+"}</Button>
-  //         </div>
-  //         <div className="col-6">
-  //           <img src={`/assets/berries/${title}/${title}-icon.png`} alt={title} />
-  //           {title}
-  //         </div>
-  //         <div className="col-1">Price: ${props.buyMode ? (props.price * BUY_MARKUP).toFixed(2) : props.price.toFixed(2)}</div>
-  //         <div className="col-3">
-  //           <button>-</button>
-  //           {orderAmount}
-  //           <button>+</button>
-  //         </div>
-  //         <div className="col-1">
-  //           <button>Order</button>
-  //         </div>
-  //       </div>
-  //     </CardTitle>
-  //     <CardBody className="text-start">
-  //       <Collapse isOpen={showDetailed}>
-  //         { !profile ?
-  //             <LoadingSpinner />
-  //           : 
-  //             <p>
-  //               <img src={`/assets/types/${profile.pokeType}.png`} alt={profile.pokeType} />
-  //               Growth Rate: {profile.growthTime} hours per stage
-  //               Dehydration Rate: {profile.dryRate}% Moisture per hour
-  //               Ideal Temperature: {profile.idealTemp}C
-  //               Ideal Cloud Coverage: {profile.idealCloud}%
-  //               Max Harvest: {profile.maxHarvest} berries
-  //               Size: {profile.size}cm
-  //             </p>}
-  //       </Collapse>
-  //     </CardBody>
-  //   </Card>
-  // )
 }

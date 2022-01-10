@@ -7,17 +7,12 @@ import Forbidden403 from "../../components/Forbidden403";
 import { cropArrToMatrix, cropMatrixToArr } from "../../utils";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import FarmInfoPanel from "../../components/FarmInfoPanel";
-import GlobalContext from "../../GlobalContext";
 import { Navigate } from "react-router-dom";
 import FarmContext from "../../FarmContext";
 import { Alert } from "reactstrap";
+import { useAlert } from "../../hooks";
 import GenericError from "../../components/GenericError";
 
-interface AlertState {
-  msg: string, color: string
-}
-
-// this is rendering twice for some reason
 export default function FarmPage(){
   const DEFAULT_CONTEXT_STATE = {
     farm : {id: 0, length: 0, width: 0, irrigationLVL: 0, lastCheckedAt : new Date(0),
@@ -67,12 +62,8 @@ export default function FarmPage(){
   const { farmID } = useParams();
   const [state, dispatch] = useReducer(reducer, DEFAULT_CONTEXT_STATE)
   const [loading, setLoading] = useState(true);
-  const [alertState, setAlertState] = useState<AlertState>({msg: "", color:"primary"});
+  const [alertState, notify] = useAlert();
   const apiError = useRef<null|string|number>(null);
-
-  const notify = (msg: string, color: string = "info") => {
-    setAlertState({ msg, color });
-  }
   
   /** Load in farm data */
   useEffect(() => {
@@ -123,7 +114,7 @@ export default function FarmPage(){
     }
   }, [state.farm.id]);
   
-  // Handle error  if api error
+  // Handle error if api error
   if (apiError.current){
     switch (apiError.current){
       case 401:

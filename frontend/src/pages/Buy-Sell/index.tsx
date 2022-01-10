@@ -1,13 +1,12 @@
 import GlobalContext from "../../GlobalContext";
-import { useState, useContext, useRef, useReducer, useEffect, ChangeEvent } from "react";
-import { Nav, NavItem, TabContent, TabPane, NavLink, Table } from "reactstrap";
-import { useAuthenticated } from "../../hooks";
+import { useState, useContext, useRef, useEffect, ChangeEvent } from "react";
+import { Alert, Nav, NavItem, TabContent, TabPane, NavLink, Table } from "reactstrap";
+import { useAuthenticated, useAlert } from "../../hooks";
 import { Navigate } from "react-router-dom";
 import Forbidden403 from "../../components/Forbidden403";
 import NotFound404 from "../../components/NotFound404";
 import GenericError from "../../components/GenericError";
 import BerryFarmerAPI from "../../BerryFarmerAPI";
-import { titleCase } from "../../utils";
 import BerryListing from "../../components/BerryListing";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
@@ -18,6 +17,7 @@ export default function BuySellPage(){
   const [showBuy, setShowBuy] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const apiError = useRef<null|string|number>(null);
+  const [alert, notify] = useAlert();
   const priceData = useRef<{prices: any, hot: Array<string>, not: Array<string>}>();
 
   /** Load In Price Data */
@@ -59,9 +59,22 @@ export default function BuySellPage(){
   }
 
   const berryOrder = async (berryType:string, amount:number) => {
-    if (!currentUser || (!showBuy && currentUser.inventory[berryType] < amount)) return;
-    const method = showBuy ? "buy" : "sell";
-    await BerryFarmerAPI.berryTransaction(method, berryType, amount);
+    try {
+      if (!currentUser || (!showBuy && currentUser.inventory[berryType] < amount)) return;
+      const method = showBuy ? "buy" : "sell";
+      const result = await BerryFarmerAPI.berryTransaction(method, berryType, amount);
+      notify(result.message, "success");
+      if (showBuy){
+        updateNumericField("funds", result.buyOrderPrice * -1);
+        modInventory(berryType, amount);
+      } else {
+        updateNumericField("funds", result.sellOrderPrice);
+        modInventory(berryType, amount * -1);
+      }
+    } catch (err:any) {
+      console.error(err);
+      notify(err.message ? err.message : "Error", "danger");
+    }
   };
 
   const handleChange = (evt:ChangeEvent<HTMLInputElement>) => {
@@ -69,33 +82,48 @@ export default function BuySellPage(){
     if (name === "searchTerm") setSearchTerm(value);
   };
 
-  console.log(priceData.current);
-
   return (
-    <main>
+    <main className="pt-3 pb-2 mb-5">
       { loading ?
         <LoadingSpinner withText withPadding />
       :
         <div className="container">
-          <Nav tabs>
+          <h1>Market</h1>
+          <Nav className="mt-4" justified tabs>
             <NavItem>
               <NavLink onClick={() => { setShowBuy(true); }} active={showBuy}>
-                Buy
+                <h5>Buy</h5>
               </NavLink>
             </NavItem>
             <NavItem>
               <NavLink onClick={() => { setShowBuy(false); }} active={!showBuy}>
-                Sell
+                <h5>Sell</h5>
               </NavLink>
             </NavItem>
           </Nav>
-          <input type="text" name="searchTerm" id="market-search" onChange={handleChange} value={searchTerm} />
+          <div className="row mt-3">
+            <div className="col-2">
+              <label htmlFor="market-search" className="form-label">Search by Name:</label>
+            </div>
+            <div className="col-6">
+              <input
+                className="form-control w-50"
+                type="text" name="searchTerm"
+                id="market-search"
+                onChange={handleChange}
+                value={searchTerm}
+              />
+            </div>
+            <div className="col-4">
+              {alert.msg && <Alert color={alert.color} toggle={() => { notify(""); }}>{alert.msg}</Alert>}
+            </div>
+          </div>
           <TabContent activeTab={1}>
             <TabPane tabId={1}>
               <Table>
                 <thead>
                   <tr>
-                    <th>Details</th> <th>Name</th> <th>Price</th> <th>Amount</th> <th>-</th>
+                    <th>Details</th> <th>Name</th> <th>Price</th> <th>Amount</th> <th>{showBuy ? "Buy" : "Sell"}</th>
                   </tr>
                   </thead>
                   <tbody>
@@ -107,7 +135,7 @@ export default function BuySellPage(){
                           buyMode
                           berryType={key}
                           price={priceData.current!.prices[key]}
-                          orderCallback={() => {}} />
+                          orderCallback={berryOrder} />
                       );})
                     :
                     Object.keys(currentUser!.inventory)
@@ -120,7 +148,7 @@ export default function BuySellPage(){
                           key={key}
                           berryType={key}
                           price={priceData.current!.prices[key]}
-                          orderCallback={() => {}} />
+                          orderCallback={berryOrder} />
                       );})
                   }
                   </tbody>

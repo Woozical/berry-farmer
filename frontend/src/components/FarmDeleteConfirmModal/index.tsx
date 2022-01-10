@@ -1,16 +1,12 @@
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Alert } from "reactstrap"
-import { useState } from "react";
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Alert } from "reactstrap";
+import { useAlert } from "../../hooks";
 
 interface FarmDeleteConfirmModalProps {
   toggleFunction: Function, confirmFunction: Function, isOpen: boolean
 }
 
 export default function FarmDeleteConfirmModal (props:FarmDeleteConfirmModalProps) {
-  const [alertState, setAlertState] = useState<{msg: string, color: string}>({msg: "", color:"primary"});
-
-  const notify = (msg: string, color: string = "info") => {
-    setAlertState({ msg, color });
-  };
+  const [alertState, notify] = useAlert();
 
   const handleConfirmClick = () => {
     try {
