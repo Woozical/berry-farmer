@@ -170,12 +170,11 @@ export default class BerryFarmerAPI {
     return res.data.harvest;
   }
 
-  // To do: pass a crop object instead, for access to farm id
-  static async waterCrop(cropID:number, amount:Number){
+  static async waterCrop(cropID:number, amount:Number, farmID:number) : Promise<CropObject>{
     const res = await this.request(`crops/${cropID}`, "PATCH", { moisture: amount });
     if (res.status === 211){
-      // await this.request(`/farms/${farmID}/sync`, "POST");
-      throw new Error("Farm requires sync");
+      await this.syncFarm(farmID);
+      return this.waterCrop(cropID, amount, farmID);
     }
     return res.data.crop;
   }

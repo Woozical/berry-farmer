@@ -41,7 +41,7 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
   const waterCrop = async (amount:number) => {
     if (!crop) return;
     try {
-      const updatedCrop = await BerryFarmerAPI.waterCrop(crop.id, amount);
+      const updatedCrop = await BerryFarmerAPI.waterCrop(crop.id, amount, farm.id);
       dispatch({ type: "CROP_UPDATE", payload: {
         x: crop.x, y: crop.y,
         crop: { ...updatedCrop }
