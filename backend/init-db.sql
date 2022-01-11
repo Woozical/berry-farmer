@@ -25,8 +25,8 @@ CREATE TABLE geo_profiles (
 
 CREATE TABLE farms (
     id serial PRIMARY KEY,
-    length smallint DEFAULT 3 NOT NULL CONSTRAINT length_valid_range CHECK (length >= 3 AND length <= 10),
-    width smallint DEFAULT 3 NOT NULL CONSTRAINT width_valid_range CHECK (width >= 3 AND width <= 10),
+    length smallint DEFAULT 3 NOT NULL CONSTRAINT length_valid_range CHECK (length >= 3 AND length <= 9),
+    width smallint DEFAULT 3 NOT NULL CONSTRAINT width_valid_range CHECK (width >= 3 AND width <= 9),
     irrigation_lvl smallint DEFAULT 0 NOT NULL CONSTRAINT irrig_lvl_valid_range CHECK (irrigation_lvl >= 0 AND irrigation_lvl <= 5),
     last_checked_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     owner text NOT NULL REFERENCES users(username) ON DELETE CASCADE,
