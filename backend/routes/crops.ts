@@ -15,6 +15,7 @@ import { FARM_SYNC_TIMER } from "../config";
 
 const router = express.Router();
 
+/** Checks for neglected crops to delete prior to handling request */
 router.use(async (req, res, next) => {
   await Crop.cleanup();
   return next();

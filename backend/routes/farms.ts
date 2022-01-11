@@ -16,12 +16,17 @@ import { FARM_SYNC_TIMER } from "../config";
 
 const router = express.Router();
 
+/** Checks for neglected crops to delete prior to handling request */
 router.use(async (req, res, next) => {
   await Crop.cleanup();
   return next();
 });
 
-// POST /farms (admin only)
+/** POST /farms (Admin Only)
+ *  Creates a new farm with the given properties. Users should create farms through the /farms/buy route.
+ *  -> { locationID, owner, length?, width?, irrigationLVL? }
+ *  <- { message: "created", farm: { id, length, width, irrigationLVL, lastCheckedAt, locationID, owner } }
+ */
 router.post("/", authenticateJWT, ensureAdmin, async (req, res, next) => {
   try {
     const validator = jsonschema.validate(req.body, farmAdminCreateSchema);
@@ -35,9 +40,12 @@ router.post("/", authenticateJWT, ensureAdmin, async (req, res, next) => {
   }
 });
 
-// POST /farms/buy (loggedIn)
-// -> { locationID }
-// { farm } <-
+/** POST /farms/buy (loggedIn) 
+ *  Creates a new farm associated to the logged in user. User should have requisite funds or a BadRequestError will be raised.
+ *  Cost of a farm is defined in the Market model, those funds will then be deducted by the user upon creation.
+ *  -> { locationID }
+ *  <- { message: "ok", farm: { id, length, width, irrigationLVL, lastCheckedAt, locationID, owner } }
+ */
 router.post("/buy", authenticateJWT, ensureLoggedIn, async (req, res, next) => {
   try {
     const validator = jsonschema.validate(req.body, farmBuySchema);
@@ -52,6 +60,17 @@ router.post("/buy", authenticateJWT, ensureLoggedIn, async (req, res, next) => {
 });
 
 router.route('/:farmID')
+  /** GET /farms/:farmID (loggedIn)
+   *  Returns farm information for the given farm ID. If an amount of time has passed the FARM_SYNC_TIMER (defined in config.ts)
+   *  Then the server will respond with a 211 code, meaning that the user must send a POST to /farms/:farmID/sync before that
+   *  resource is available for viewing.
+   *  
+   *  200: <- { message: "ok", farm: {
+   *            id, length, width, irrigationLVL, lastCheckedAt,
+   *            locationName, locationRegion, locationCountry, crops: [...]
+   *            } 
+   *          }
+   */
   .get(checkNumericParams, authenticateJWT, ensureLoggedIn, async (req, res, next) => {
     try {
       const farmID = Number(req.params.farmID);
@@ -65,6 +84,11 @@ router.route('/:farmID')
       return next(err);
     }
   })
+  /** PATCH /farms/:farmID (Admin Only) 
+   *  Modifies the information of the farm with the given farm ID. Users should use /farms/:farmID/upgrade.
+   *  -> { length?, width?, irrigationLVL? }
+   *  <- { message: "updated", farm: { id, length, width, irrigationLVL, lastCheckedAt, locationID, owner } }
+   */
   .patch(checkNumericParams, authenticateJWT, ensureAdmin, async (req, res, next) => {
     try {
       const validator = jsonschema.validate(req.body, farmAdminPatchSchema);
@@ -77,6 +101,9 @@ router.route('/:farmID')
       return next(err);
     }
   })
+  /** DELETE /farms/:farmID (Owner Only) 
+   *  Deletes the farm, and all associated crops, with the given farm ID.
+   */
   .delete(checkNumericParams, authenticateJWT, ensureOwnedBy, async (req, res, next) => {
     try {
       const result = await Farm.delete(Number(req.params.farmID));
@@ -86,7 +113,14 @@ router.route('/:farmID')
     }
   });
 
-// POST /farms/:farmID/sync (loggedIn, ownedBy)
+/** POST /farms/:farmID/sync (Owner Only)
+ *  Performs a crop sync operation on the given farm. All crops associated with the farm
+ *  have time delta-based operations performed on them, updating their moisture and possibly, health
+ *  and curGrowthStage. This operation requires weather data, and may query WeatherAPI for weather data
+ *  on the farm's location if it does not already exist for the requisite dates to check.
+ *  Once finished, the farm's lastCheckedAt is updated to the time this operation took place, and the server
+ *  responds with the updated farm object similar to GET /farms/:farmID
+ */
 router.post("/:farmID/sync", checkNumericParams, authenticateJWT, ensureOwnedBy, async (req, res, next) => {
   try {
     const farmID = Number(req.params.farmID);
@@ -98,8 +132,14 @@ router.post("/:farmID/sync", checkNumericParams, authenticateJWT, ensureOwnedBy,
   }
 });
 
-// POST /farms/:farmID/upgrade (loggedIn, ownedBy)
-// - > { type : "irrigation" OR "length" OR "width" }
+/** POST /farms/:farmID/upgrade (Owner Only)
+ *  Increases the length, width, or irrigationLVL of the farm with the given id by 1.
+ *  The owner of the farm must have the requisite funds for the upgrade (defined in Market model) or a BadRequest will
+ *  be thrown. Those funds will then be deducted from the user.
+ * 
+ *  -> { type: "irrigation" OR "length" OR "width" }
+ *  <- { message: "updgraded", farm: { id, length, width, irrigationLVL, lastCheckedAt, locationID, owner } }
+ */
 router.post("/:farmID/upgrade", checkNumericParams, authenticateJWT, ensureOwnedBy, async (req, res, next) => {
   try {
     const validator = jsonschema.validate(req.body, farmUpgradeSchema);
