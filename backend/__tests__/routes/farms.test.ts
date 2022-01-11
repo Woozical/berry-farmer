@@ -329,6 +329,32 @@ describe("POST /farms/:farmID/sync", () => {
     jest.useRealTimers();
   });
 
+  it("works even if no crops to sync", async () => {
+    const oldFarm = await Farm.create({owner: "usr3", locationID});
+    jest.useFakeTimers("modern");
+    jest.setSystemTime(new Date(Date.now() + 3600000));
+    const endpoint = `/farms/${oldFarm.id}/sync`;
+    const resp = await request(app).post(endpoint).set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      message: "updated",
+      farm: {
+        crops: [],
+        id: oldFarm.id,
+        irrigationLVL: 0,
+        lastCheckedAt: expect.any(String),
+        length: 3,
+        locationCountry: 'United States',
+        locationName: 'Las Vegas',
+        locationRegion: 'Nevada',
+        owner: 'usr3',
+        width: 3
+      }
+    });
+    expect(resp.body.farm.lastCheckedAt).not.toEqual(oldFarm.lastCheckedAt);
+    jest.useRealTimers();
+  });
+
   it("responds 400 if non-numeric farmID param", async () => {
     const resp = await request(app).post("/farms/nadfbn/sync").set("authorization", usr3Token);
     expect(resp.statusCode).toEqual(400);
@@ -347,13 +373,6 @@ describe("POST /farms/:farmID/sync", () => {
   it("responds 404 if invalid farm id", async () => {
     const endpoint = "/farms/-1/sync";
     const resp = await request(app).post(endpoint).set("authorization", usr1Token);
-    expect(resp.statusCode).toEqual(404);
-  });
-
-  it("responds 404 if no crops to sync", async () => {
-    const farm = await Farm.create({owner: "usr3", locationID});
-    const endpoint = `/farms/${farm.id}/sync`;
-    const resp = await request(app).post(endpoint).set("authorization", usr3Token);
     expect(resp.statusCode).toEqual(404);
   });
 });

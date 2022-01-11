@@ -76,7 +76,7 @@ describe("PATCH /crops/:cropID", () => {
         berryType: "cheri",
         farmID: expect.any(Number),
         health: 100,
-        id: expect.any(Number),
+        id: cropIDs[0],
         curGrowthStage: 2,
         moisture: 44,
         plantedAt: expect.any(String),
@@ -84,6 +84,50 @@ describe("PATCH /crops/:cropID", () => {
         y: 0
       }
     });
+  });
+
+  it("works: admin on fully grown crop", async () => {
+    await Crop.update(cropIDs[0], { curGrowthStage: 4 });
+    const resp = await request(app).patch(endpoint)
+    .send({ moisture: 44, health: 20 }).set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      message: "updated",
+      crop: {
+        berryType: "cheri",
+        farmID: expect.any(Number),
+        health: 20,
+        id: cropIDs[0],
+        curGrowthStage: 4,
+        moisture: 44,
+        plantedAt: expect.any(String),
+        x: 0,
+        y: 0
+      }
+    });
+  });
+
+  it("works: admin on farm in need of sync", async () => {
+    jest.useFakeTimers("modern");
+    jest.setSystemTime(new Date(Date.now() + 3600000));
+    const resp = await request(app).patch(endpoint)
+    .send({ moisture: 44, curGrowthStage: 2 }).set("authorization", usr3Token);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      message: "updated",
+      crop: {
+        berryType: "cheri",
+        farmID: expect.any(Number),
+        health: 100,
+        id: cropIDs[0],
+        curGrowthStage: 2,
+        moisture: 44,
+        plantedAt: expect.any(String),
+        x: 0,
+        y: 0
+      }
+    });
+    jest.useRealTimers();
   });
 
   it("works: owner", async () => {
@@ -97,7 +141,7 @@ describe("PATCH /crops/:cropID", () => {
         berryType: "cheri",
         farmID: expect.any(Number),
         health: 100,
-        id: expect.any(Number),
+        id: cropIDs[0],
         curGrowthStage: 0,
         moisture: 35,
         plantedAt: expect.any(String),
@@ -105,6 +149,16 @@ describe("PATCH /crops/:cropID", () => {
         y: 0
       }
     });
+  });
+
+  it("owner: responds 211 if containing farm in need of sync", async () => {
+    jest.useFakeTimers("modern");
+    jest.setSystemTime(new Date(Date.now() + 3600000));
+    await Crop.update(cropIDs[0], { moisture: 10 });
+    const resp = await request(app).patch(endpoint)
+    .send({ moisture: 25 }).set("authorization", usr1Token);
+    expect(resp.statusCode).toEqual(211);
+    jest.useRealTimers();
   });
 
   it("responds 400 if non-numeric cropID", async () => {
@@ -128,6 +182,13 @@ describe("PATCH /crops/:cropID", () => {
   it("owner: responds 400 if bad payload", async () => {
     const resp = await request(app).patch(endpoint)
     .send({ moisture: 100, plantedAt: "1999-12-21" }).set("authorization", usr1Token);
+    expect(resp.statusCode).toEqual(400);
+  });
+
+  it("owner: responds 400 if crop is fully grown", async () => {
+    await Crop.update(cropIDs[0], { curGrowthStage: 4 });
+    const resp = await request(app).patch(endpoint)
+    .send({ moisture: 20 }).set("authorization", usr1Token);
     expect(resp.statusCode).toEqual(400);
   });
 
@@ -279,8 +340,6 @@ describe("POST /crops", () => {
     const user = await User.get("usr1");
     expect(user.inventory.cheri).toEqual(0);
   });
-
-  // it("non-admin: responds 211 if farm needs sync")
 
   it("responds 400 if non-admin lacks berry to plant", async () => {
     const resp = await request(app).post("/crops")

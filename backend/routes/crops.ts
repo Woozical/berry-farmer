@@ -74,9 +74,14 @@ router.route("/:cropID")
         throw invalidBadRequest(validator);
       }
       const cropID = Number(req.params.cropID);
-      // respond 211 if sync required, this is to prevent using PATCH to up moisture prior to checking neglected farm
+      /** Non-Admin Conditions: */
+      // responds 211 if sync required, this is to prevent using PATCH to up moisture prior to checking neglected farm
+      // responds 400 if crop is fully grown
       if (!res.locals.user.isAdmin){
         const crop = await Crop.get(cropID);
+        if (crop.curGrowthStage === 4){
+          throw new BadRequestError("Cannot change moisture after crop is fully grown.")
+        }
         const farm = await Farm.get(crop.farmID);
         if (Date.now() - farm.lastCheckedAt.getTime() > FARM_SYNC_TIMER){
           return res.status(211).json({ message: `Farm needs crop sync. Send POST request to /farms/${farm.id}/sync` });
@@ -112,6 +117,9 @@ router.route("/:cropID")
  *  an initial growth stage of the crop. The server will respond with 403 Forbidden
  *  if a non-admin includes curGrowthStage in their payload, even  if all other fields are valid.
  * 
+ *  Before the crop is planted, the Farm performs a crop sync operation.
+ *  (To avoid creating cases where crop plantedAt times are > farm lastCheckedAt time)
+ * 
  *  => { x, y, farmID, berryType, curGrowthStage? }
  *  { message: "created", crop: { id, plantedAt, health, moisture, etc... } }
  */
@@ -129,6 +137,8 @@ router.post("/", authenticateJWT, ensureOwnedBy, async (req, res, next) => {
     if (!res.locals.user.isAdmin && (!(berryType in user.inventory) || user.inventory[berryType] < 1)){
       throw new BadRequestError(`No ${berryType} berry in ${user.username}'s inventory to plant`);
     }
+    // Perform farm sync before crop creation
+    await Farm.syncCrops(farmID);
     const crop = await Crop.create({ farmX, farmY, farmID, berryType, curGrowthStage: req.body.curGrowthStage });
     if (!res.locals.user.isAdmin) await User.deductBerry(user.username, berryType, -1);
     return res.status(201).json({ message: "created", crop });

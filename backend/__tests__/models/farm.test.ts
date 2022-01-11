@@ -416,6 +416,17 @@ describe("Crop sync method", () => {
     expect(Number(q.rows[2].moisture)).toBeCloseTo(100);
   });
 
+  it("test 8: works with no crops", async () => {
+    const q = await db.query("SELECT last_checked_at FROM farms WHERE id = $1", [farmID]);
+    await db.query("DELETE FROM crops WHERE farm_id = $1", [farmID]);
+    await Farm.syncCrops(farmID);
+    const u = await db.query("SELECT last_checked_at FROM farms WHERE id = $1", [farmID]);
+    // no error
+    // lastCheckedAt updated
+    expect(q.rows[0].last_checked_at).not.toEqual(u.rows[0].last_checked_at);
+    expect(q.rows[0].last_checked_at.getTime()).toBeLessThan(u.rows[0].last_checked_at.getTime());
+  });
+
   it("updates lastCheckedAt on farm", async () => {
     const q = await db.query("SELECT * FROM farms");
     const { id } = q.rows[0];
