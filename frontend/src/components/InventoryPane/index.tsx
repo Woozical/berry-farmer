@@ -28,9 +28,9 @@ export default function InventoryPane (props:InventoryPaneProps) {
     return  (
       <ListGroupItem key={berryType}>
         <div className="row align-items-center text-start">
-          <img className="col-sm-3 float-left" src={`/assets/berries/${title}/${title}-icon.png`} alt={title} />
-          <small className="col-sm-6">{title} x{currentUser.inventory[berryType]}</small>
-          <button id={`btn-plant-${berryType}`} disabled={disabled} className="col-sm-2 btn btn-sm btn-primary">Plant</button>
+          <img className="col-3 float-left" src={`/assets/berries/${title}/${title}-icon.png`} alt={title} />
+          <small className="col-6">{title} x{currentUser.inventory[berryType]}</small>
+          <button id={`btn-plant-${berryType}`} disabled={disabled} className="col-sm-2 col-3 btn btn-sm btn-primary">Plant</button>
         </div>
       </ListGroupItem>
     );

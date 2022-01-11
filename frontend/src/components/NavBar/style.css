@@ -8,6 +8,7 @@ nav {
 }
 
 nav a {
+  transition: color linear 0.25s;
   color: #f0f2f5;
   text-decoration: none;
 }

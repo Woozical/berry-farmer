@@ -22,7 +22,7 @@ export default function HelpPane(props:HelpPaneProps){
       throw new Error("Missing prop type from HelpPane component");
   }
   return (
-    <Card>
+    <Card className="border-0">
       <CardBody className="text-center">
         <small className="text-muted">{msg}</small>
       </CardBody>

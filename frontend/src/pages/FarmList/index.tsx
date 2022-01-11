@@ -91,7 +91,7 @@ export default function FarmListPage(){
         toggleFunction={hideCreate}
       />
             <h1>{titleCase(currentUser!.username)}'s Farms</h1>
-      <div className="container w-50">
+      <div className="container w-sm-50">
         <hr />
         <div>
           {farms.map( (farm) => {

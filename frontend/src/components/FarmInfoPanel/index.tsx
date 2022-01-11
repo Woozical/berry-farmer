@@ -124,7 +124,7 @@ export default function FarmInfoPanel(props:FarmInfoPanelProps){
       </NavItem>
     </Nav>
 
-    <TabContent className="mt-1" activeTab={activeTab}>
+    <TabContent className="pt-1 bg-white border-start border-end border-bottom" activeTab={activeTab}>
       <TabPane tabId={1}>
         <FarmDetailsPane upgradeCallback={upgradeFarm} />
       </TabPane>

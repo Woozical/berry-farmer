@@ -1,3 +1,11 @@
 .Footer {
   min-height: 5vh;
 }
+
+.Footer-link {
+  transition: linear 0.25s;;
+}
+
+.Footer-link:hover {
+  color: #FFF !important;
+}

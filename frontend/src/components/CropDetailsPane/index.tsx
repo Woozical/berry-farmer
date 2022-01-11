@@ -32,12 +32,12 @@ export default function CropDetailsPane(props:CropDetailsPaneProps){
   }
 
   return (
-    <Card className="container">
+    <Card className="container border-0">
       <CardTitle tag="div" className="row align-items-center">
-        <h6 className="col-sm-9">
+        <h6 className="col-9">
           {berryTitle} Berry
         </h6>
-        <img className="col-sm-3 float-right" src={iconPath} alt={berryTitle} />
+        <img className="col-3 float-right" src={iconPath} alt={berryTitle} />
       
         <hr />
       </CardTitle>

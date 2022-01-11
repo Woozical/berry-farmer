@@ -34,10 +34,10 @@ export default function BuySellPage(){
         }
       }
     }
-    loadPrices().finally(() => {
+    if (auth) loadPrices().finally(() => {
       setLoading(false);
     });
-  }, []);
+  }, [auth]);
 
   if(!auth) return redirect;
 
@@ -60,7 +60,7 @@ export default function BuySellPage(){
 
   const berryOrder = async (berryType:string, amount:number) => {
     try {
-      if (!currentUser || (!showBuy && currentUser.inventory[berryType] < amount)) return;
+      if (!currentUser || amount < 1 || (!showBuy && currentUser.inventory[berryType] < amount)) return;
       const method = showBuy ? "buy" : "sell";
       const result = await BerryFarmerAPI.berryTransaction(method, berryType, amount);
       notify(result.message, "success");
@@ -101,29 +101,33 @@ export default function BuySellPage(){
               </NavLink>
             </NavItem>
           </Nav>
-          <div className="row mt-3">
-            <div className="col-2">
-              <label htmlFor="market-search" className="form-label">Search by Name:</label>
-            </div>
-            <div className="col-6">
-              <input
-                className="form-control w-50"
-                type="text" name="searchTerm"
-                id="market-search"
-                onChange={handleChange}
-                value={searchTerm}
-              />
-            </div>
-            <div className="col-4">
-              {alert.msg && <Alert color={alert.color} toggle={() => { notify(""); }}>{alert.msg}</Alert>}
-            </div>
-          </div>
           <TabContent activeTab={1}>
-            <TabPane tabId={1}>
+            <TabPane className="bg-white border-start border-end border-bottom container pt-3" tabId={1}>
+              <div className="row">
+                <div className="col-2">
+                  <label htmlFor="market-search" className="form-label">Filter by Name:</label>
+                </div>
+                <div className="col-6">
+                  <input
+                    className="form-control w-50"
+                    type="text" name="searchTerm"
+                    id="market-search"
+                    onChange={handleChange}
+                    value={searchTerm}
+                  />
+                </div>
+                <div className="col-4">
+                  {alert.msg && <Alert color={alert.color} toggle={() => { notify(""); }}>{alert.msg}</Alert>}
+                </div>
+              </div>
               <Table>
                 <thead>
                   <tr>
-                    <th>Details</th> <th>Name</th> <th>Price</th> <th>Amount</th> <th>{showBuy ? "Buy" : "Sell"}</th>
+                    <th>Details</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Amount</th>
+                    <th>{showBuy ? "Buy" : "Sell"}</th>
                   </tr>
                   </thead>
                   <tbody>

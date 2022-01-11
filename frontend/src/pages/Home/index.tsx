@@ -30,7 +30,7 @@ export default function HomePage(){
   }, []);
 
   return (
-  <main className="pt-3 pb-2 text-center">
+  <main className="pt-3 pb-2 container text-center">
     <div className="Home-bg"></div>
     <h1 className="Home-welcome">{ currentUser ? `Welcome, ${titleCase(currentUser.username)}!` : "Welcome!" }</h1>
     <br />
@@ -45,8 +45,8 @@ export default function HomePage(){
     }
     {!currentUser &&
       <div className="row">
-        <Link to="/login" className="col-sm-3 offset-sm-2 mt-2 btn btn-lg btn-primary mr-2">Login</Link>
-        <Link to="/signup" className="col-sm-3 offset-sm-2 mt-2 btn btn-lg btn-primary ml-2">Signup</Link>
+        <Link to="/login" className="btn btn-lg btn-primary col-sm-3 offset-sm-2 mt-2 mr-sm-2">Login</Link>
+        <Link to="/signup" className="btn btn-lg btn-primary col-sm-3 offset-sm-2 mt-2 ml-sm-2">Signup</Link>
       </div>
     }
   </main>)
