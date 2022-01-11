@@ -58,7 +58,7 @@ function FarmGrid(){
   }
 
   return (
-    <table>
+    <table className="mx-auto mb-1">
       <tbody>
         {matrix.map( (row, idx) => { return <tr key={`row-${idx}`}>{row}</tr> } )}
       </tbody>

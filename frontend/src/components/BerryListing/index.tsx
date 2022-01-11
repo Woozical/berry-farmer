@@ -58,16 +58,16 @@ export default function BerryListing (props:BerryListingProps) {
         <div className="row justify-content-center align-items-center">
           <i
             onClick={ () => {adjustAmount(-1)}}
-            className="d-none d-md-inline col-sm-1 bi bi-dash-circle me-1 BerryListing-button" />
+            className="d-none d-md-inline col-1 bi bi-dash-circle me-1 BerryListing-button" />
           <input
-            className="col-md-2 text-center"
+            className="col-sm-4 col-md-2 col-7 text-center"
             onChange={handleChange}
             name={`${props.berryType}OrderAmount`}
             type="text"
             value={orderAmount} />
           <i
             onClick={ () => {adjustAmount(1)}}
-            className="d-none d-md-inline col-sm-1 bi bi-plus-circle ms-1 BerryListing-button" />
+            className="d-none d-md-inline col-1 bi bi-plus-circle ms-1 BerryListing-button" />
         </div>
       </td>
       <td>

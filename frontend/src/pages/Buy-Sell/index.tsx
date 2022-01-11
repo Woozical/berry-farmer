@@ -120,7 +120,7 @@ export default function BuySellPage(){
                   {alert.msg && <Alert color={alert.color} toggle={() => { notify(""); }}>{alert.msg}</Alert>}
                 </div>
               </div>
-              <Table>
+              <Table responsive>
                 <thead>
                   <tr>
                     <th>Name</th>

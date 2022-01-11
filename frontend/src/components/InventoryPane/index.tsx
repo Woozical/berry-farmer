@@ -22,16 +22,16 @@ export default function InventoryPane (props:InventoryPaneProps) {
     }
   };
   
-  const berryListing = (berryType:string) => {
+  const berryListing = (berryType:string, last=false) => {
     if (!currentUser) return;
     const title = titleCase(berryType);
     const disabled = ( !(!crop) || activeGrid.y < 0 || activeGrid.x < 0);
     return  (
-      <ListGroupItem key={berryType}>
-        <div className="row align-items-center text-start">
+      <ListGroupItem className={`border-0 ${last ? "" : "border-bottom"}`} key={berryType}>
+        <div className="row align-items-center justify-content-between text-start">
           <BerryIcon berryType={berryType} className="col-3 float-left" />
           <small className="col-6">{title} x{currentUser.inventory[berryType]}</small>
-          <button id={`btn-plant-${berryType}`} disabled={disabled} className="col-sm-2 col-3 btn btn-sm btn-primary">Plant</button>
+          <button id={`btn-plant-${berryType}`} disabled={disabled} className="col-3 btn btn-sm btn-primary">Plant</button>
         </div>
       </ListGroupItem>
     );
@@ -41,8 +41,8 @@ export default function InventoryPane (props:InventoryPaneProps) {
 
   return (showInv ? 
     <ListGroup onClick={handleClick}>
-      {Object.keys(currentUser!.inventory).map(berryType => {
-        return currentUser!.inventory[berryType] ? berryListing(berryType) : <React.Fragment key={berryType} />;
+      {Object.keys(currentUser!.inventory).map( (berryType, idx, arr) => {
+        return currentUser!.inventory[berryType] ? berryListing(berryType, (idx===arr.length-1)) : <React.Fragment key={berryType} />;
       })}
     </ListGroup>
     :

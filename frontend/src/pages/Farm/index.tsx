@@ -139,10 +139,10 @@ export default function FarmPage(){
           <LoadingSpinner />
           :
           <div className="row">
-            <div className="col-sm-8">
+            <div className="col-md-8 border-start border-top border-sm-bottom-0 border-md-bottom border-sm-end border-md-end-0">
               <FarmGrid />
             </div>
-            <div className="col-sm-4">
+            <div className="col-md-4 border-bottom border-end border-sm-top-0 border-md-top border-sm-start border-md-start-0">
               <FarmInfoPanel notify={notify} />
               {alertState.msg &&
               <Alert

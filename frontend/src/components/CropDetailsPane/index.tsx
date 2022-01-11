@@ -33,19 +33,19 @@ export default function CropDetailsPane(props:CropDetailsPaneProps){
 
   return (
     <Card className="container border-0">
-      <CardTitle tag="div" className="row align-items-center">
-        <h6 className="col-9">
+      <CardTitle tag="div" className="row align-items-center justify-content-between">
+        <h6 className="col-5">
           {berryTitle} Berry
         </h6>
-        <BerryIcon berryType={props.crop.berryType} className="col-3 float-right" />
+        <BerryIcon berryType={props.crop.berryType} className="col-auto float-right" />
         <hr />
       </CardTitle>
       <CardSubtitle>
-      <div className="row text-center">
-          <div className="col">
+      <div className="row text-center justify-content-evenly">
+          <div className="col-auto">
             Planted: {timeAgo(new Date(props.crop.plantedAt))}.
           </div>
-          <div className="col">
+          <div className="col-auto">
             Stage: {props.crop.curGrowthStage} / 4
           </div>
         </div>
@@ -54,10 +54,10 @@ export default function CropDetailsPane(props:CropDetailsPaneProps){
         <div className="row text-center">
           <div className="col-6">
             <div className="row align-items-center">
-              <div className="col-2">
+              <div className="col-auto">
                 <HealthSprite health={props.crop.health} />
               </div>
-              <div className="col-10">
+              <div className="col-auto">
                 Health: {props.crop.health.toFixed(0)}%
               </div>
             </div>
@@ -95,15 +95,15 @@ export default function CropDetailsPane(props:CropDetailsPaneProps){
           </div>
         </div>
         <hr />
-        <div className="row">
+        <div className="row justify-content-between">
           <button
-            className="col-4 btn btn-success btn-lg"
+            className="col-xxl-4 col-xl-5 col-lg-6 col-md-12 col-sm-4 col-12 btn btn-success btn-lg"
             disabled={props.crop.curGrowthStage < 4}
             onClick={harvest}>
               Harvest
           </button>
           <button
-            className="col-4 offset-4 btn btn-danger btn-lg"
+            className="col-xxl-4 col-xl-5 col-lg-6 col-md-12 col-sm-4 col-12 btn btn-danger btn-lg"
             onClick={destroy}
           >
             Destroy
