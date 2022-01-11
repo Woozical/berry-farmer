@@ -1,5 +1,6 @@
 import HealthSprite from "../HealthSprite";
 import MoistureSprite from "../MoistureSprite";
+import BerryIcon from "../BerryIcon";
 import type { CropObject } from "../../BerryFarmerAPI";
 import { titleCase } from "../../utils";
 import { Card, CardTitle, CardBody, CardSubtitle } from "reactstrap";
@@ -12,7 +13,6 @@ interface CropDetailsPaneProps {
 
 export default function CropDetailsPane(props:CropDetailsPaneProps){
   const berryTitle = titleCase(props.crop.berryType);
-  const iconPath = `/assets/berries/${berryTitle}/${berryTitle}-icon.png`;
 
   const waterCrop:EventHandler<any> = (evt) => {
     if (props.crop.curGrowthStage < 4 && evt.target.id.includes("btn-water")){
@@ -37,8 +37,7 @@ export default function CropDetailsPane(props:CropDetailsPaneProps){
         <h6 className="col-9">
           {berryTitle} Berry
         </h6>
-        <img className="col-3 float-right" src={iconPath} alt={berryTitle} />
-      
+        <BerryIcon berryType={props.crop.berryType} className="col-3 float-right" />
         <hr />
       </CardTitle>
       <CardSubtitle>

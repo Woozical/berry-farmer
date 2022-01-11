@@ -1,0 +1,8 @@
+.berryIcon {
+  cursor: pointer;
+  transition: filter linear 0.25s;
+}
+
+.berryIcon:hover {
+  filter:brightness(1.15);
+}

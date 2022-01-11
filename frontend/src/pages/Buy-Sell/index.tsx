@@ -104,26 +104,25 @@ export default function BuySellPage(){
           <TabContent activeTab={1}>
             <TabPane className="bg-white border-start border-end border-bottom container pt-3" tabId={1}>
               <div className="row">
-                <div className="col-2">
+                <div className="col-sm-2">
                   <label htmlFor="market-search" className="form-label">Filter by Name:</label>
                 </div>
-                <div className="col-6">
+                <div className="col-sm-6">
                   <input
-                    className="form-control w-50"
+                    className="form-control w-sm-50"
                     type="text" name="searchTerm"
                     id="market-search"
                     onChange={handleChange}
                     value={searchTerm}
                   />
                 </div>
-                <div className="col-4">
+                <div className="col-sm-4">
                   {alert.msg && <Alert color={alert.color} toggle={() => { notify(""); }}>{alert.msg}</Alert>}
                 </div>
               </div>
               <Table>
                 <thead>
                   <tr>
-                    <th>Details</th>
                     <th>Name</th>
                     <th>Price</th>
                     <th>Amount</th>
