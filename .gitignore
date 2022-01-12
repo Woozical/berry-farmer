@@ -5,3 +5,4 @@ backend/berry-profiles.sql
 */coverage
 berry_pull
 frontend/public/assets
+backend/dist

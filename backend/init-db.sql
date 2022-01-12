@@ -1,7 +1,7 @@
-DROP DATABASE IF EXISTS berry_farmer;
-CREATE DATABASE berry_farmer;
+DROP DATABASE IF EXISTS berry_farmer_prod;
+CREATE DATABASE berry_farmer_prod;
 
-\c berry_farmer
+\c berry_farmer_prod
 
 CREATE TABLE users (
     username text PRIMARY KEY,
@@ -82,4 +82,3 @@ CREATE TABLE user_inventories (
         username, berry_type
     )
 );
-

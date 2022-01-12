@@ -45,11 +45,3 @@ export class ForbiddenError extends ExpressError {
     super(message, 403);
   }
 }
-
-// module.exports = {
-//   ExpressError,
-//   NotFoundError,
-//   UnauthorizedError,
-//   BadRequestError,
-//   ForbiddenError,
-// };

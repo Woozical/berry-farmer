@@ -1,10 +1,10 @@
 "use strict";
 require("dotenv").config();
-const SECRET_KEY = process.env.SECRET_KEY || "secret-dev";
+const SECRET_KEY = process.env.SECRET_KEY || "nhsuirthnisjngiaeugrniu4enagie";
 const PORT = process.env.PORT ? +process.env.PORT : 3001;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY || "wAPI-key-dev"; 
-const NEW_ACCOUNT_FUNDS = 1500;
-const FARM_SYNC_TIMER = 600000; // time, in ms, inbetween farm syncs in which a new sync must be performed to access or modify the farm
+const NEW_ACCOUNT_FUNDS = process.env.NEW_ACCOUNT_FUNDS || 1500;
+const FARM_SYNC_TIMER = process.env.FARM_SYNC_TIMER || 600000; // time, in ms, inbetween farm syncs in which a new sync must be performed to access or modify the farm
 const API_URL = (process.env.NODE_ENV === "test") ? "http://deadendpoint.blahblah" : "http://api.weatherapi.com/v1";
 
 // Use dev database, testing database, or via env var, production database
