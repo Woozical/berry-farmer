@@ -7,8 +7,8 @@ import FarmSummaryLink from "../../components/FarmSummaryLink";
 import NewFarmCard from "../../components/NewFarmCard";
 import FarmDeleteConfirmModal from "../../components/FarmDeleteConfirmModal";
 import FarmCreateForm from "../../components/FarmCreateForm";
-import { titleCase } from "../../utils";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import { titleCase } from "../../utils";
 import "./style.css";
 
 export default function FarmListPage(){
@@ -18,8 +18,8 @@ export default function FarmListPage(){
   const [farms, setFarms] = useState<FarmObjectSummary[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const activeDelete = useRef<null|number>(null);
   const [loading, setLoading] = useState(true);
+  const activeDelete = useRef<null|number>(null);
 
   useEffect(() => {
     async function loadFarmList(){
