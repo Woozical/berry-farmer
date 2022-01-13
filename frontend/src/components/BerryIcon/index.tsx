@@ -21,7 +21,7 @@ export default function BerryIcon(props:BerryIconProps){
       const profile = await BerryFarmerAPI.getBerryProfile(props.berryType);
       setProfile(profile);
     }
-    if (showDetails && !profile) loadProfile();
+    if (showDetails && (!profile || profile.name !== props.berryType)) loadProfile();
   }, [showDetails, profile, props.berryType]);
 
   return (

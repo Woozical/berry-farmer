@@ -7,6 +7,7 @@ import FarmSummaryLink from "../../components/FarmSummaryLink";
 import NewFarmCard from "../../components/NewFarmCard";
 import FarmDeleteConfirmModal from "../../components/FarmDeleteConfirmModal";
 import FarmCreateForm from "../../components/FarmCreateForm";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import { titleCase } from "../../utils";
 import "./style.css";
 
@@ -17,12 +18,14 @@ export default function FarmListPage(){
   const [farms, setFarms] = useState<FarmObjectSummary[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [loading, setLoading] = useState(true);
   const activeDelete = useRef<null|number>(null);
 
   useEffect(() => {
     async function loadFarmList(){
       const farms = await BerryFarmerAPI.getUsersFarms(currentUser!.username);
       setFarms(farms);
+      setLoading(false);
     }
     if (currentUser) loadFarmList();
   }, [currentUser]);
@@ -90,15 +93,17 @@ export default function FarmListPage(){
         submitCallback={createFarm}
         toggleFunction={hideCreate}
       />
-            <h1>{titleCase(currentUser!.username)}'s Farms</h1>
+      <h1>{titleCase(currentUser!.username)}'s Farms</h1>
       <div className="container w-sm-50">
         <hr />
-        <div>
-          {farms.map( (farm) => {
-            return <FarmSummaryLink key={farm.id} deleteClick={showDelete} farm={farm} />
-          })}
-          {farms.length < MAX_FARMS && <NewFarmCard onClick={showCreate} />}
-        </div>
+        { loading? <LoadingSpinner /> :
+            <div>
+              {farms.map( (farm) => {
+                return <FarmSummaryLink key={farm.id} deleteClick={showDelete} farm={farm} />
+              })}
+              {farms.length < MAX_FARMS && <NewFarmCard onClick={showCreate} />}
+            </div>
+        }
       </div>
     </main>
   )
