@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEventHandler, useState } from "react";
 import { Form, Card, CardBody, Label, FormGroup, Button, Input, FormFeedback } from "reactstrap";
-import { validateFormData } from "../../utils";
+import { validateFormData, titleCase } from "../../utils";
 import schema from "../../schemas/LoginForm.json";
 import LoadingSpinner from "../LoadingSpinner";
 
@@ -40,8 +40,8 @@ export default function LoginForm ({submitCallback}:LoginFormProps) {
       // If the API did not respond with a success, clear all state and display fail message
       if (!loginAttempt){
         setAwaitingAPI(false);
-        setFormFeedback({...DEFAULT_FEEDBACK_STATE, apiResponse});
-        setFormData(DEFAULT_STATE);
+        setFormFeedback({...DEFAULT_FEEDBACK_STATE, apiResponse: titleCase(apiResponse) });
+        setFormData({...DEFAULT_STATE, username: formData.username});
       }
     } else {
       setFormFeedback({...DEFAULT_FEEDBACK_STATE, ...validation.errors});

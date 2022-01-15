@@ -72,12 +72,13 @@ export default class User {
          RETURNING username, email, funds, is_admin AS "isAdmin"`,
          [username, email, hashedPW]
       );
-      
+        
       return {...result.rows[0], funds: Number(result.rows[0].funds)};
     } catch (err:any) {
       if (err.code && err.code === '23505'){
-        const keyViolation = err.constraint.includes("username") ? `username: ${username}` : `email: ${email}`;
-        throw new BadRequestError(`Bad Request: Duplicate ${keyViolation}`);
+        console.log(err);
+        const keyViolation = (err.constraint === "users_pkey") ? `username: ${username}` : `email: ${email}`;
+        throw new BadRequestError(`${keyViolation} already in use.`);
       }
       throw err;
     }
@@ -94,7 +95,7 @@ export default class User {
        FROM users
        WHERE username = $1`, [username]
     );
-    if (result.rowCount < 1) throw new NotFoundError(`No user with username ${username}`);
+    if (result.rowCount < 1) throw new NotFoundError(`No user with username: ${username}`);
 
     const auth = await bcrypt.compare(password, result.rows[0].password);
     if (auth) {
@@ -102,7 +103,7 @@ export default class User {
       delete user.password;
       return user;
     }
-    throw new UnauthorizedError();
+    throw new UnauthorizedError("Incorrect password");
   }
 
   /** Updates user with given username and data

@@ -54,8 +54,11 @@ function App() {
       const user = await changeUserLogin(username);
       return [true, user];
     } catch (err:any) {
-      console.error(err);
-      return [false, err.message];
+      let msg = err.message || "An error occured.";
+      if (err.response){
+        msg = err.response.data.error.message;
+      }
+      return [false, msg];
     }
   };
 
@@ -66,8 +69,11 @@ function App() {
       const user = await changeUserLogin(username);
       return [true, user];
     } catch (err:any) {
-      console.error(err);
-      return [false, err.message];
+      let msg = err.message  || "An error occured.";
+      if (err.response){
+        msg = err.response.data.error.message;
+      }
+      return [false, msg];
     }
   };
 
